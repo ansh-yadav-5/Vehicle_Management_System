@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Context docBase="C:\Users\anshy\IdeaProjects\Form1\src\main\webapp\WEB-INF">
+  <Resources cacheMaxSize="10240">
+    <PreResources base="C:/Users/anshy/IdeaProjects/Form1/target/classes" className="org.apache.catalina.webresources.DirResourceSet" webAppMount="/WEB-INF/classes"/>
+    <PostResources base="C:/Users/anshy/.m2/repository/com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/mysql-connector-j-9.7.0.jar"/>
+    <PostResources base="C:/Users/anshy/.m2/repository/com/google/protobuf/protobuf-java/4.31.1/protobuf-java-4.31.1.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/protobuf-java-4.31.1.jar"/>
+    <PostResources base="C:/Users/anshy/.m2/repository/org/apache/tomcat/tomcat-servlet-api/10.1.57/tomcat-servlet-api-10.1.57.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/tomcat-servlet-api-10.1.57.jar"/>
+  </Resources>
+</Context>
