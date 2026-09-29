@@ -26,8 +26,10 @@
         /* Navbar */
         .navbar { background: #000000; color: #ffffff; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
         .navbar .logo { font-size: 24px; font-weight: bold; letter-spacing: -0.5px; }
-        .navbar .user-info { font-size: 14px; }
-        .navbar a { color: #ef4444; text-decoration: none; font-weight: bold; margin-left: 15px; }
+        .navbar .nav-right { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+        .navbar a.nav-btn { color: #ffffff; text-decoration: none; font-weight: 600; padding: 8px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); transition: 0.2s; }
+        .navbar a.nav-btn:hover { background: rgba(255,255,255,0.15); }
+        .navbar a.logout { color: #ef4444; text-decoration: none; font-weight: bold; }
 
         /* Hero Search Section */
         .hero-section { background: #000000; color: white; padding: 40px 40px 60px 40px; }
@@ -68,9 +70,10 @@
 <!-- NAVBAR -->
 <div class="navbar">
     <div class="logo">VMS <span style="font-weight: 300;">Drive</span></div>
-    <div class="user-info">
-        Welcome, <strong><%= userName %></strong>
-        <a href="index.jsp">Logout</a>
+    <div class="nav-right">
+        <a href="my_bookings.jsp" class="nav-btn">My Bookings</a>
+        <span>Welcome, <strong><%= userName %></strong></span>
+        <a href="index.jsp" class="logout">Logout</a>
     </div>
 </div>
 
@@ -158,7 +161,6 @@
                 <div class="vehicle-subtitle"><%= rs.getString("brand") %> • <%= rs.getString("category") %></div>
                 <div class="price-tag">₹<%= price %> <span style="font-size: 14px; font-weight: normal; color: #666;">/ day</span></div>
 
-                <!-- FORM ACTION UPDATED TO BookVehicleServlet -->
                 <form action="BookVehicleServlet" method="POST">
                     <input type="hidden" name="vehicleId" value="<%= vId %>">
                     <input type="hidden" id="price_<%= vId %>" value="<%= price %>">
