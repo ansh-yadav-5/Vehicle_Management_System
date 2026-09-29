@@ -47,12 +47,16 @@
         .container { max-width: 1200px; margin: -30px auto 40px auto; padding: 0 20px; }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-        .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #eee; }
+        .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
         .card-img { width: 100%; height: 190px; object-fit: cover; background: #e5e7eb; }
-        .card-body { padding: 20px; }
+        .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
         .vehicle-title { font-size: 20px; font-weight: 700; margin: 0 0 5px 0; }
-        .vehicle-subtitle { color: #666; font-size: 14px; margin-bottom: 12px; }
+        .vehicle-subtitle { color: #666; font-size: 14px; margin-bottom: 10px; }
+
+        /* Vehicle Description Style */
+        .vehicle-desc { font-size: 13px; color: #555555; line-height: 1.4; margin-bottom: 15px; flex-grow: 1; }
+
         .price-tag { font-size: 22px; font-weight: 800; color: #000; margin-bottom: 15px; }
 
         .calc-summary { background: #f8f8f8; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: 600; text-align: center; border: 1px solid #e5e5e5; }
@@ -153,12 +157,19 @@
                     hasVehicles = true;
                     int vId = rs.getInt("vehicle_id");
                     double price = rs.getDouble("price_per_day");
+                    String description = rs.getString("description");
         %>
         <div class="card">
             <img src="<%= rs.getString("image_path") %>" class="card-img" alt="Vehicle Image" onerror="this.src='https://via.placeholder.com/320x190?text=VMS+Drive';">
             <div class="card-body">
                 <h3 class="vehicle-title"><%= rs.getString("title") %></h3>
                 <div class="vehicle-subtitle"><%= rs.getString("brand") %> • <%= rs.getString("category") %></div>
+
+                <!-- DISPLAY VEHICLE DESCRIPTION -->
+                <div class="vehicle-desc">
+                    <%= (description != null && !description.trim().isEmpty()) ? description : "No description provided." %>
+                </div>
+
                 <div class="price-tag">₹<%= price %> <span style="font-size: 14px; font-weight: normal; color: #666;">/ day</span></div>
 
                 <form action="BookVehicleServlet" method="POST">
