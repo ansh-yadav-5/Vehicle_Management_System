@@ -18,18 +18,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Uber Drive - Rent Vehicles On Demand</title>
+    <title>VMS - Rent Vehicles On Demand</title>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background: #f3f3f3; margin: 0; padding: 0; color: #000; }
 
-        /* Uber Style Navbar */
+        /* Navbar */
         .navbar { background: #000000; color: #ffffff; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
         .navbar .logo { font-size: 24px; font-weight: bold; letter-spacing: -0.5px; }
         .navbar .user-info { font-size: 14px; }
         .navbar a { color: #ef4444; text-decoration: none; font-weight: bold; margin-left: 15px; }
 
-        /* Uber Hero Search Bar */
+        /* Hero Search Section */
         .hero-section { background: #000000; color: white; padding: 40px 40px 60px 40px; }
         .hero-title { font-size: 36px; font-weight: 700; margin-bottom: 20px; }
 
@@ -41,7 +41,7 @@
         .search-btn { background: #000000; color: #ffffff; padding: 13px 25px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
         .search-btn:hover { background: #222222; }
 
-        /* Main Content Grid */
+        /* Main Catalog Grid */
         .container { max-width: 1200px; margin: -30px auto 40px auto; padding: 0 20px; }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
@@ -67,7 +67,7 @@
 
 <!-- NAVBAR -->
 <div class="navbar">
-    <div class="logo">Uber <span style="font-weight: 300;">Drive</span></div>
+    <div class="logo">VMS <span style="font-weight: 300;">Drive</span></div>
     <div class="user-info">
         Welcome, <strong><%= userName %></strong>
         <a href="index.jsp">Logout</a>
@@ -121,16 +121,29 @@
             try (Connection conn = DBConnection.getConnection()) {
                 StringBuilder sql = new StringBuilder("SELECT * FROM vehicles WHERE status = 'AVAILABLE'");
 
-                if (filterCategory != null && !filterCategory.trim().isEmpty()) {
-                    sql.append(" AND category = '").append(filterCategory).append("'");
+                boolean hasCategory = (filterCategory != null && !filterCategory.trim().isEmpty());
+                boolean hasModel = (filterModel != null && !filterModel.trim().isEmpty());
+
+                if (hasCategory) {
+                    sql.append(" AND category = ?");
                 }
-                if (filterModel != null && !filterModel.trim().isEmpty()) {
-                    sql.append(" AND (title LIKE '%").append(filterModel).append("%' OR brand LIKE '%").append(filterModel).append("%')");
+                if (hasModel) {
+                    sql.append(" AND (title LIKE ? OR brand LIKE ?)");
                 }
                 sql.append(" ORDER BY vehicle_id DESC");
 
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(sql.toString());
+                PreparedStatement stmt = conn.prepareStatement(sql.toString());
+                int paramIndex = 1;
+
+                if (hasCategory) {
+                    stmt.setString(paramIndex++, filterCategory);
+                }
+                if (hasModel) {
+                    stmt.setString(paramIndex++, "%" + filterModel.trim() + "%");
+                    stmt.setString(paramIndex++, "%" + filterModel.trim() + "%");
+                }
+
+                ResultSet rs = stmt.executeQuery();
                 boolean hasVehicles = false;
 
                 while (rs.next()) {
@@ -139,13 +152,14 @@
                     double price = rs.getDouble("price_per_day");
         %>
         <div class="card">
-            <img src="<%= rs.getString("image_path") %>" class="card-img" alt="Vehicle Image" onerror="this.src='https://via.placeholder.com/320x190?text=Uber+Drive';">
+            <img src="<%= rs.getString("image_path") %>" class="card-img" alt="Vehicle Image" onerror="this.src='https://via.placeholder.com/320x190?text=VMS+Drive';">
             <div class="card-body">
                 <h3 class="vehicle-title"><%= rs.getString("title") %></h3>
                 <div class="vehicle-subtitle"><%= rs.getString("brand") %> • <%= rs.getString("category") %></div>
                 <div class="price-tag">₹<%= price %> <span style="font-size: 14px; font-weight: normal; color: #666;">/ day</span></div>
 
-                <form action="VehicleCatalogServlet" method="POST">
+                <!-- FORM ACTION UPDATED TO BookVehicleServlet -->
+                <form action="BookVehicleServlet" method="POST">
                     <input type="hidden" name="vehicleId" value="<%= vId %>">
                     <input type="hidden" id="price_<%= vId %>" value="<%= price %>">
 
@@ -214,7 +228,6 @@
         });
     }
 
-    // Run automatically when page loads
     window.onload = syncAndCalculate;
 </script>
 
