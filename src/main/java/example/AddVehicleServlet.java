@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import java.io.File;
@@ -28,34 +29,50 @@ public class AddVehicleServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession();
+        String role = (String) session.getAttribute("userRole");
+
+        if (role == null || !"ADMIN".equalsIgnoreCase(role)) {
+            response.sendRedirect("index.jsp");
+            return;
+        }
+
         String title = request.getParameter("title");
         String brand = request.getParameter("brand");
         String category = request.getParameter("category");
-        double pricePerDay = Double.parseDouble(request.getParameter("pricePerDay"));
+        String priceStr = request.getParameter("pricePerDay");
         String description = request.getParameter("description");
 
-        // Handle Image File Upload
-        Part filePart = request.getPart("image");
-        String fileName = extractFileName(filePart);
+        // Handle File Upload
+        Part filePart = request.getPart("imageFile");
+        String dbImagePath = "https://via.placeholder.com/320x190?text=VMS+Drive"; // Fallback default
 
-        // Get absolute path to the web application directory
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
-        File uploadDir = new File(uploadPath);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdir();
+        if (filePart != null && filePart.getSize() > 0) {
+            String fileName = extractFileName(filePart);
+
+            // Get real path of the uploads folder on server
+            String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
+            File uploadDir = new File(uploadPath);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdir();
+            }
+
+            // Generate unique filename to avoid overwriting existing images
+            String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
+            String filePath = uploadPath + File.separator + uniqueFileName;
+
+            // Save file on server
+            filePart.write(filePath);
+
+            // Save relative web path to database
+            dbImagePath = UPLOAD_DIR + "/" + uniqueFileName;
         }
 
-        String dbImagePath = UPLOAD_DIR + "/" + fileName;
-        if (fileName != null && !fileName.isEmpty()) {
-            filePart.write(uploadPath + File.separator + fileName);
-        } else {
-            dbImagePath = "assets/default_vehicle.jpg"; // Default fallback image
-        }
-
-        // Save Vehicle Record into MySQL Database
         try (Connection conn = DBConnection.getConnection()) {
-            String sql = "INSERT INTO vehicles (title, brand, category, price_per_day, status, image_path, description) " +
-                    "VALUES (?, ?, ?, ?, 'AVAILABLE', ?, ?)";
+            double pricePerDay = Double.parseDouble(priceStr);
+            String sql = "INSERT INTO vehicles (title, brand, category, price_per_day, image_path, description, status) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, 'AVAILABLE')";
+
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, title);
             stmt.setString(2, brand);
@@ -64,16 +81,11 @@ public class AddVehicleServlet extends HttpServlet {
             stmt.setString(5, dbImagePath);
             stmt.setString(6, description);
 
-            int rowsInserted = stmt.executeUpdate();
+            stmt.executeUpdate();
+            request.setAttribute("message", "Vehicle successfully added with uploaded image!");
 
-            if (rowsInserted > 0) {
-                request.setAttribute("message", "Vehicle added successfully!");
-            } else {
-                request.setAttribute("error", "Failed to add vehicle.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Database error: " + e.getMessage());
+        } catch (SQLException | NumberFormatException e) {
+            request.setAttribute("error", "Failed to add vehicle: " + e.getMessage());
         }
 
         request.getRequestDispatcher("admin_dashboard.jsp").forward(request, response);
@@ -87,6 +99,6 @@ public class AddVehicleServlet extends HttpServlet {
                 return s.substring(s.indexOf("=") + 2, s.length() - 1);
             }
         }
-        return "";
+        return "vehicle.jpg";
     }
 }

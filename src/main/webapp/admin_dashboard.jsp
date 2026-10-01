@@ -45,6 +45,7 @@
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; color: #475569; }
         .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        .form-group input[type="file"] { padding: 8px; background: #f8fafc; cursor: pointer; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #000; }
 
         .full-width { grid-column: 1 / -1; }
@@ -63,7 +64,6 @@
 <div class="navbar">
     <div class="logo">VMS <span style="font-weight: 300;">Admin</span></div>
     <div class="nav-right">
-        <!-- TOP NAVBAR SHOW BOOKINGS BUTTON -->
         <a href="admin_bookings.jsp" class="nav-btn">Show Bookings & Fleet</a>
         <span>Welcome, <strong><%= userName %></strong></span>
         <a href="index.jsp" class="logout">Logout</a>
@@ -76,7 +76,6 @@
 
     <%-- Quick Action Navigation Bar --%>
     <div class="action-bar">
-        <!-- QUICK ACTION SHOW BOOKINGS BUTTON -->
         <a href="admin_bookings.jsp" class="btn-link">📋 Show All Customer Bookings</a>
         <a href="admin_bookings.jsp" class="btn-link btn-link-secondary">🚘 Manage Fleet & Rates</a>
     </div>
@@ -92,10 +91,10 @@
         <div class="alert alert-success"><%= message %></div>
     <% } %>
 
-    <!-- ADD VEHICLE FORM -->
+    <!-- ADD VEHICLE FORM WITH FILE UPLOAD -->
     <div class="card">
         <div class="card-title">Add New Vehicle to Fleet</div>
-        <form action="AddVehicleServlet" method="POST">
+        <form action="AddVehicleServlet" method="POST" enctype="multipart/form-data">
             <div class="form-grid">
                 <div class="form-group">
                     <label>Vehicle Title / Name</label>
@@ -116,10 +115,13 @@
                     <label>Daily Rental Rate (₹)</label>
                     <input type="number" step="0.01" name="pricePerDay" placeholder="e.g. 2500" required>
                 </div>
+
+                <!-- FILE UPLOAD INPUT -->
                 <div class="form-group full-width">
-                    <label>Image URL / Path</label>
-                    <input type="text" name="imagePath" placeholder="e.g. https://example.com/car.jpg or images/car.jpg" required>
+                    <label>Vehicle Image (JPG/PNG)</label>
+                    <input type="file" name="imageFile" accept="image/*" required>
                 </div>
+
                 <div class="form-group full-width">
                     <label>Description</label>
                     <textarea name="description" rows="3" placeholder="Enter vehicle specifications, transmission type, seating capacity, features, etc."></textarea>
