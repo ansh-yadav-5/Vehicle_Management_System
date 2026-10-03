@@ -14,34 +14,335 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Reservations - DriveEazy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background: #f3f4f6; margin: 0; padding: 0; color: #111; }
-        .navbar { background: #000; color: #fff; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
-        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        :root {
+            --primary: #0f172a;
+            --accent: #22c55e;
+            --bg-gray: #f8fafc;
+            --card-border: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            padding-bottom: 60px;
+        }
+
+        /* Top Navigation Header */
+        .navbar {
+            background: #000000;
+            color: #ffffff;
+            padding: 16px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+
+        .navbar .brand {
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar .brand span {
+            color: var(--accent);
+            font-weight: 400;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Dark Hero Banner */
+        .hero {
+            background: linear-gradient(180deg, #000000 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 40px 5% 60px 5%;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .hero p {
+            color: #94a3b8;
+            font-size: 15px;
+        }
+
+        /* Reservation List Container */
+        .container {
+            max-width: 1000px;
+            margin: -30px auto 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Notifications */
+        .alert {
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .alert-error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        .alert-success { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+
+        /* Booking Cards */
+        .booking-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .vehicle-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .vehicle-thumb {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #f1f5f9;
+        }
+
+        .vehicle-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .vehicle-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Badges */
+        .status-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .badge-approved { background: #dcfce7; color: #15803d; }
         .badge-pending { background: #fef3c7; color: #b45309; }
-        .kyc-box { background: #f9fafb; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px dashed #cbd5e1; }
+        .badge-rejected { background: #fee2e2; color: #b91c1c; }
+
+        /* Reservation Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* KYC Document Box */
+        .kyc-upload-box {
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 18px;
+            margin-top: 5px;
+        }
+
+        .kyc-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .kyc-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .kyc-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .kyc-form input[type="text"] {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .kyc-form input[type="file"] {
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-upload {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-upload:hover {
+            background: #1e293b;
+        }
+
+        .empty-state {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 50px 20px;
+            text-align: center;
+            border: 1px solid var(--card-border);
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .btn-browse {
+            display: inline-block;
+            margin-top: 15px;
+            background: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
+<!-- Navbar -->
 <div class="navbar">
-    <div style="font-size: 22px; font-weight: bold;">DriveEazy</div>
-    <div>
-        <a href="catalog.jsp" style="color: #fff; text-decoration: none; margin-right: 15px;">Book Vehicle</a>
-        <a href="index.jsp" style="color: #ef4444; text-decoration: none; font-weight: bold;">Logout</a>
+    <a href="catalog.jsp" class="brand">Drive<span>Eazy</span></a>
+    <div class="nav-actions">
+        <a href="catalog.jsp" class="nav-btn">🚘 Book Another Vehicle</a>
+        <a href="index.jsp" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
     </div>
 </div>
 
+<!-- Header -->
+<div class="hero">
+    <h1>My Reservations</h1>
+    <p>Track booking status, manage rental dates, and complete verification</p>
+</div>
+
 <div class="container">
-    <h2>My Vehicle Reservations</h2>
+
+    <%-- Messages --%>
+    <%
+        String error = (String) request.getAttribute("error");
+        String message = (String) request.getAttribute("message");
+        if (error != null) {
+    %>
+        <div class="alert alert-error"><%= error %></div>
+    <% } else if (message != null) { %>
+        <div class="alert alert-success"><%= message %></div>
+    <% } %>
 
     <%
-        String sql = "SELECT b.*, v.title, v.brand, v.image_path FROM bookings b " +
+        boolean hasBookings = false;
+        String sql = "SELECT b.*, v.title, v.brand, v.image_path, v.category " +
+                     "FROM bookings b " +
                      "JOIN vehicles v ON b.vehicle_id = v.vehicle_id " +
                      "WHERE b.user_id = ? ORDER BY b.booking_id DESC";
 
@@ -51,37 +352,87 @@
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
+                hasBookings = true;
                 int bookingId = rs.getInt("booking_id");
                 String kycStatus = rs.getString("kyc_status");
+                if (kycStatus == null) kycStatus = "PENDING";
+                String deliveryType = rs.getString("delivery_type");
+                if (deliveryType == null) deliveryType = "SELF_PICKUP";
     %>
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3><%= rs.getString("title") %> (<%= rs.getString("brand") %>)</h3>
-            <span class="badge <%= "APPROVED".equalsIgnoreCase(kycStatus) ? "badge-approved" : "badge-pending" %>">
-                KYC: <%= kycStatus != null ? kycStatus : "PENDING" %>
-            </span>
+    <div class="booking-card">
+        <div class="card-header">
+            <div class="vehicle-info">
+                <img src="<%= rs.getString("image_path") %>" class="vehicle-thumb" alt="Vehicle" onerror="this.src='https://via.placeholder.com/80x60?text=Vehicle';">
+                <div>
+                    <div class="vehicle-title"><%= rs.getString("title") %></div>
+                    <div class="vehicle-sub"><%= rs.getString("brand") %> • <%= rs.getString("category") %></div>
+                </div>
+            </div>
+
+            <div class="status-group">
+                <span class="badge <%= "APPROVED".equalsIgnoreCase(kycStatus) ? "badge-approved" : ("REJECTED".equalsIgnoreCase(kycStatus) ? "badge-rejected" : "badge-pending") %>">
+                    KYC: <%= kycStatus %>
+                </span>
+                <span class="badge badge-approved" style="background:#e0f2fe; color:#0369a1;">
+                    Booking #<%= bookingId %>
+                </span>
+            </div>
         </div>
-        <p><strong>Dates:</strong> <%= rs.getString("pickup_date") %> to <%= rs.getString("return_date") %> (<%= rs.getInt("total_days") %> Days)</p>
-        <p><strong>Total Paid:</strong> ₹<%= rs.getDouble("total_price") %></p>
+
+        <div class="details-grid">
+            <div class="detail-item">
+                <span class="detail-label">Pickup Date</span>
+                <span class="detail-value"><%= rs.getString("pickup_date") %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Return Date</span>
+                <span class="detail-value"><%= rs.getString("return_date") %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Duration</span>
+                <span class="detail-value"><%= rs.getInt("total_days") %> Days</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Handover Mode</span>
+                <span class="detail-value"><%= "DOORSTEP".equalsIgnoreCase(deliveryType) ? "Doorstep Delivery" : "Self Pickup" %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Total Amount</span>
+                <span class="detail-value" style="color: #16a34a;">₹<%= String.format("%.2f", rs.getDouble("total_price")) %></span>
+            </div>
+        </div>
 
         <% if (!"APPROVED".equalsIgnoreCase(kycStatus)) { %>
-        <div class="kyc-box">
-            <h4 style="margin-top:0;">Upload Driving License for Instant Handover Verification</h4>
-            <form action="UploadKYCServlet" method="POST" enctype="multipart/form-data" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="kyc-upload-box">
+            <div class="kyc-title">📄 Verification Required for Vehicle Handover</div>
+            <div class="kyc-sub">Please submit your Driving License details to get your reservation confirmed by DriveEazy.</div>
+
+            <form action="UploadKYCServlet" method="POST" enctype="multipart/form-data" class="kyc-form">
                 <input type="hidden" name="bookingId" value="<%= bookingId %>">
-                <input type="text" name="dlNumber" placeholder="Enter DL Number" required style="padding:8px; border:1px solid #ccc; border-radius:6px;">
-                <input type="file" name="kycDocument" accept="image/*" required style="padding:6px;">
-                <button type="submit" style="background:#000; color:#fff; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">Submit KYC</button>
+                <input type="text" name="dlNumber" placeholder="Enter Driving License Number" value="<%= rs.getString("dl_number") != null ? rs.getString("dl_number") : "" %>" required>
+                <input type="file" name="kycDocument" accept="image/*" required>
+                <button type="submit" class="btn-upload">Submit Document</button>
             </form>
         </div>
         <% } %>
     </div>
     <%
             }
+
+            if (!hasBookings) {
+    %>
+    <div class="empty-state">
+        <h3>No Reservations Found</h3>
+        <p style="color: #64748b;">You haven't booked any self-drive cars or bikes yet.</p>
+        <a href="catalog.jsp" class="btn-browse">Explore DriveEazy Fleet</a>
+    </div>
+    <%
+            }
         } catch (Exception e) {
-            out.println("<p>Error loading reservations: " + e.getMessage() + "</p>");
+            out.println("<p style='color:red;'>Error loading reservations: " + e.getMessage() + "</p>");
         }
     %>
+
 </div>
 
 </body>
