@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.sql.*" %>
+<%@ page import="java.sql.*, java.net.URLEncoder" %>
 <%@ page import="example.DBConnection" %>
 <%
     String userName = (String) session.getAttribute("userName");
@@ -8,82 +8,66 @@
         return;
     }
 
-    // Filter Parameters from Search Header
     String filterPickup = request.getParameter("pickupDate");
     String filterReturn = request.getParameter("returnDate");
     String filterCategory = request.getParameter("category");
     String filterModel = request.getParameter("model");
+    String filterDelivery = request.getParameter("deliveryType");
+    if (filterDelivery == null) filterDelivery = "SELF_PICKUP";
 %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VMS - Rent Vehicles On Demand</title>
+    <title>DriveEazy Fleet - Rent Self-Drive Vehicles</title>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background: #f3f3f3; margin: 0; padding: 0; color: #000; }
+        body { background: #f3f4f6; margin: 0; padding: 0; color: #111; }
 
-        /* Navbar */
         .navbar { background: #000000; color: #ffffff; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
-        .navbar .logo { font-size: 24px; font-weight: bold; letter-spacing: -0.5px; }
-        .navbar .nav-right { display: flex; align-items: center; gap: 20px; font-size: 14px; }
-        .navbar a.nav-btn { color: #ffffff; text-decoration: none; font-weight: 600; padding: 8px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); transition: 0.2s; }
-        .navbar a.nav-btn:hover { background: rgba(255,255,255,0.15); }
-        .navbar a.logout { color: #ef4444; text-decoration: none; font-weight: bold; }
+        .navbar .logo { font-size: 24px; font-weight: 800; }
+        .navbar a.nav-btn { color: #ffffff; text-decoration: none; font-weight: 600; padding: 8px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); }
 
-        /* Hero Search Section */
         .hero-section { background: #000000; color: white; padding: 40px 40px 60px 40px; }
-        .hero-title { font-size: 36px; font-weight: 700; margin-bottom: 20px; }
+        .hero-title { font-size: 32px; font-weight: 800; margin-bottom: 20px; }
 
-        .search-card { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; color: #000; }
-        .input-group { flex: 1; min-width: 180px; }
-        .input-group label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: #555; }
-        .input-group input, .input-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background: #f9f9f9; outline: none; }
-        .input-group input:focus, .input-group select:focus { border-color: #000; background: #fff; }
-        .search-btn { background: #000000; color: #ffffff; padding: 13px 25px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
-        .search-btn:hover { background: #222222; }
+        .search-card { background: #ffffff; padding: 25px; border-radius: 12px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; color: #000; }
+        .input-group { flex: 1; min-width: 160px; }
+        .input-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: #555; }
+        .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        .search-btn { background: #000; color: #fff; padding: 11px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* Main Catalog Grid */
-        .container { max-width: 1200px; margin: -30px auto 40px auto; padding: 0 20px; }
+        .container { max-width: 1250px; margin: -30px auto 40px auto; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-        .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
-        .card-img { width: 100%; height: 190px; object-fit: cover; background: #e5e7eb; }
+        .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #e5e7eb; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-img { width: 100%; height: 200px; object-fit: cover; background: #e5e7eb; }
         .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
-        .vehicle-title { font-size: 20px; font-weight: 700; margin: 0 0 5px 0; }
-        .vehicle-subtitle { color: #666; font-size: 14px; margin-bottom: 10px; }
 
-        /* Vehicle Description Style */
-        .vehicle-desc { font-size: 13px; color: #555555; line-height: 1.4; margin-bottom: 15px; flex-grow: 1; }
+        .spec-tags { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+        .tag { background: #f3f4f6; color: #374151; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
 
-        .price-tag { font-size: 22px; font-weight: 800; color: #000; margin-bottom: 15px; }
+        .price-tag { font-size: 22px; font-weight: 800; color: #000; margin: 10px 0; }
+        .deposit-info { font-size: 12px; color: #16a34a; font-weight: 600; margin-bottom: 12px; }
 
-        .calc-summary { background: #f8f8f8; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: 600; text-align: center; border: 1px solid #e5e5e5; }
-        .btn-ride { width: 100%; padding: 12px; background: #000000; color: #ffffff; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
-        .btn-ride:hover { background: #222222; }
+        .calc-summary { background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; text-align: center; border: 1px solid #e5e7eb; }
 
-        /* Alerts */
-        .alert { padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
-        .alert-error { background: #fee2e2; color: #dc2626; }
-        .alert-success { background: #dcfce7; color: #16a34a; }
+        .btn-ride { width: 100%; padding: 12px; background: #000; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+        .btn-wa { width: 100%; padding: 10px; background: #25D366; color: #fff; text-decoration: none; text-align: center; border-radius: 8px; font-size: 13px; font-weight: bold; display: block; }
     </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <div class="navbar">
-    <div class="logo">VMS <span style="font-weight: 300;">Drive</span></div>
-    <div class="nav-right">
+    <div class="logo">DriveEazy <span style="font-weight: 300;">Self-Drive</span></div>
+    <div>
         <a href="my_bookings.jsp" class="nav-btn">My Bookings</a>
-        <span>Welcome, <strong><%= userName %></strong></span>
-        <a href="index.jsp" class="logout">Logout</a>
+        <a href="index.jsp" style="color:#ef4444; margin-left: 15px; font-weight: bold; text-decoration:none;">Logout</a>
     </div>
 </div>
 
-<!-- HERO SEARCH SECTION -->
 <div class="hero-section">
-    <div class="hero-title">Rent rides on your terms</div>
+    <div class="hero-title">Self-Drive Car & Bike Rentals</div>
     <form action="catalog.jsp" method="GET" class="search-card">
         <div class="input-group">
             <label>Pickup Date</label>
@@ -94,6 +78,13 @@
             <input type="date" name="returnDate" id="globalReturn" value="<%= filterReturn != null ? filterReturn : "" %>" required>
         </div>
         <div class="input-group">
+            <label>Delivery Mode</label>
+            <select name="deliveryType" id="globalDelivery" onchange="syncAndCalculate()">
+                <option value="SELF_PICKUP" <%= "SELF_PICKUP".equals(filterDelivery) ? "selected" : "" %>>Self Pickup (Free)</option>
+                <option value="DOORSTEP" <%= "DOORSTEP".equals(filterDelivery) ? "selected" : "" %>>Doorstep Delivery (+₹500)</option>
+            </select>
+        </div>
+        <div class="input-group">
             <label>Vehicle Type</label>
             <select name="category">
                 <option value="">All Categories</option>
@@ -101,101 +92,60 @@
                 <option value="BIKE" <%= "BIKE".equals(filterCategory) ? "selected" : "" %>>Bikes</option>
             </select>
         </div>
-        <div class="input-group">
-            <label>Model / Brand</label>
-            <input type="text" name="model" placeholder="e.g. Honda, BMW" value="<%= filterModel != null ? filterModel : "" %>">
-        </div>
-        <button type="submit" class="search-btn">Search Vehicles</button>
+        <button type="submit" class="search-btn">Search Fleet</button>
     </form>
 </div>
 
-<!-- MAIN CATALOG GRID -->
 <div class="container">
-
-    <%-- Alert Notifications --%>
-    <%
-        String error = (String) request.getAttribute("error");
-        String message = (String) request.getAttribute("message");
-        if (error != null) {
-    %>
-        <div class="alert alert-error"><%= error %></div>
-    <% } else if (message != null) { %>
-        <div class="alert alert-success"><%= message %></div>
-    <% } %>
-
     <div class="grid">
         <%
             try (Connection conn = DBConnection.getConnection()) {
-                StringBuilder sql = new StringBuilder("SELECT * FROM vehicles WHERE status = 'AVAILABLE'");
-
-                boolean hasCategory = (filterCategory != null && !filterCategory.trim().isEmpty());
-                boolean hasModel = (filterModel != null && !filterModel.trim().isEmpty());
-
-                if (hasCategory) {
-                    sql.append(" AND category = ?");
-                }
-                if (hasModel) {
-                    sql.append(" AND (title LIKE ? OR brand LIKE ?)");
-                }
-                sql.append(" ORDER BY vehicle_id DESC");
-
-                PreparedStatement stmt = conn.prepareStatement(sql.toString());
-                int paramIndex = 1;
-
-                if (hasCategory) {
-                    stmt.setString(paramIndex++, filterCategory);
-                }
-                if (hasModel) {
-                    stmt.setString(paramIndex++, "%" + filterModel.trim() + "%");
-                    stmt.setString(paramIndex++, "%" + filterModel.trim() + "%");
-                }
-
+                String sql = "SELECT * FROM vehicles WHERE status = 'AVAILABLE' ORDER BY vehicle_id DESC";
+                PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery();
-                boolean hasVehicles = false;
 
                 while (rs.next()) {
-                    hasVehicles = true;
                     int vId = rs.getInt("vehicle_id");
                     double price = rs.getDouble("price_per_day");
-                    String description = rs.getString("description");
+                    double deposit = rs.getDouble("security_deposit");
+                    String title = rs.getString("title");
+
+                    String waText = "Hi DriveEazy, I want to book " + title + " from " + (filterPickup != null ? filterPickup : "today") + " to " + (filterReturn != null ? filterReturn : "tomorrow");
+                    String waUrl = "https://wa.me/919876543210?text=" + URLEncoder.encode(waText, "UTF-8");
         %>
         <div class="card">
-            <img src="<%= rs.getString("image_path") %>" class="card-img" alt="Vehicle Image" onerror="this.src='https://via.placeholder.com/320x190?text=VMS+Drive';">
+            <img src="<%= rs.getString("image_path") %>" class="card-img" alt="Vehicle" onerror="this.src='https://via.placeholder.com/320x190?text=DriveEazy+Vehicle';">
             <div class="card-body">
-                <h3 class="vehicle-title"><%= rs.getString("title") %></h3>
-                <div class="vehicle-subtitle"><%= rs.getString("brand") %> • <%= rs.getString("category") %></div>
+                <h3 style="margin: 0 0 4px 0;"><%= title %></h3>
+                <div style="color: #666; font-size: 13px;"><%= rs.getString("brand") %> • <%= rs.getString("category") %></div>
 
-                <!-- DISPLAY VEHICLE DESCRIPTION -->
-                <div class="vehicle-desc">
-                    <%= (description != null && !description.trim().isEmpty()) ? description : "No description provided." %>
+                <div class="spec-tags">
+                    <span class="tag"><%= rs.getString("transmission") %></span>
+                    <span class="tag"><%= rs.getString("fuel_type") %></span>
+                    <span class="tag"><%= rs.getInt("seating_capacity") %> Seats</span>
                 </div>
 
-                <div class="price-tag">₹<%= price %> <span style="font-size: 14px; font-weight: normal; color: #666;">/ day</span></div>
+                <div style="font-size: 13px; color: #555; margin-bottom: 10px;">
+                    <%= rs.getString("description") != null ? rs.getString("description") : "Well-maintained self-drive vehicle." %>
+                </div>
+
+                <div class="price-tag">₹<%= price %> <span style="font-size:13px; font-weight:normal; color:#666;">/ day</span></div>
+                <div class="deposit-info">🛡️ Refundable Deposit: ₹<%= deposit %></div>
 
                 <form action="BookVehicleServlet" method="POST">
                     <input type="hidden" name="vehicleId" value="<%= vId %>">
                     <input type="hidden" id="price_<%= vId %>" value="<%= price %>">
-
                     <input type="hidden" id="pickup_<%= vId %>" name="pickupDate" value="<%= filterPickup != null ? filterPickup : "" %>">
                     <input type="hidden" id="return_<%= vId %>" name="returnDate" value="<%= filterReturn != null ? filterReturn : "" %>">
+                    <input type="hidden" id="delivery_<%= vId %>" name="deliveryType" value="<%= filterDelivery %>">
 
-                    <div class="calc-summary" id="summary_<%= vId %>">
-                        <% if (filterPickup != null && filterReturn != null && !filterPickup.isEmpty() && !filterReturn.isEmpty()) { %>
-                            Calculating fare...
-                        <% } else { %>
-                            Search dates above to calculate fare
-                        <% } %>
-                    </div>
+                    <div class="calc-summary" id="summary_<%= vId %>">Select dates to view fare breakdown</div>
 
                     <button type="submit" class="btn-ride">Reserve Vehicle</button>
+                    <a href="<%= waUrl %>" target="_blank" class="btn-wa">📱 Quick Reserve via WhatsApp</a>
                 </form>
             </div>
         </div>
-        <%
-                }
-                if (!hasVehicles) {
-        %>
-            <p style="grid-column: 1/-1; text-align: center; color: #666; font-size: 18px; padding: 40px;">No available vehicles matching your search criteria.</p>
         <%
                 }
             } catch (Exception e) {
@@ -206,37 +156,35 @@
 </div>
 
 <script>
-    // Sync header dates with vehicle cards & dynamically calculate fare
     function syncAndCalculate() {
-        const globalPickup = document.getElementById("globalPickup").value;
-        const globalReturn = document.getElementById("globalReturn").value;
+        const pickup = document.getElementById("globalPickup").value;
+        const returnD = document.getElementById("globalReturn").value;
+        const delivery = document.getElementById("globalDelivery").value;
 
-        if (!globalPickup || !globalReturn) return;
+        if (!pickup || !returnD) return;
 
-        const pickupDate = new Date(globalPickup);
-        const returnDate = new Date(globalReturn);
-        const timeDiff = returnDate.getTime() - pickupDate.getTime();
-        const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        const pDate = new Date(pickup);
+        const rDate = new Date(returnD);
+        const days = Math.ceil((rDate - pDate) / (1000 * 3600 * 24));
+        const deliveryFee = (delivery === "DOORSTEP") ? 500 : 0;
 
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
+        document.querySelectorAll('.card').forEach(card => {
             const form = card.querySelector('form');
             if (!form) return;
 
             const vId = form.querySelector('input[name="vehicleId"]').value;
-            const pricePerDay = parseFloat(document.getElementById('price_' + vId).value);
-            const summaryDiv = document.getElementById('summary_' + vId);
+            const price = parseFloat(document.getElementById('price_' + vId).value);
+            const summary = document.getElementById('summary_' + vId);
 
-            document.getElementById('pickup_' + vId).value = globalPickup;
-            document.getElementById('return_' + vId).value = globalReturn;
+            document.getElementById('pickup_' + vId).value = pickup;
+            document.getElementById('return_' + vId).value = returnD;
+            document.getElementById('delivery_' + vId).value = delivery;
 
-            if (totalDays > 0) {
-                const totalFare = totalDays * pricePerDay;
-                summaryDiv.innerHTML = totalDays + " Day(s) • Estimated Total: ₹" + totalFare.toFixed(2);
-                summaryDiv.style.color = "#000000";
+            if (days > 0) {
+                const total = (days * price) + deliveryFee;
+                summary.innerHTML = days + " Day(s) • Base: ₹" + (days * price) + (deliveryFee > 0 ? " + Delivery: ₹500" : "") + "<br><strong>Total Payable: ₹" + total.toFixed(2) + "</strong>";
             } else {
-                summaryDiv.innerHTML = "Return date must be after Pickup date";
-                summaryDiv.style.color = "#dc2626";
+                summary.innerHTML = "Return date must be after Pickup date";
             }
         });
     }
