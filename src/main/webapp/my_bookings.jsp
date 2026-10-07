@@ -9,6 +9,9 @@
         response.sendRedirect("index.jsp");
         return;
     }
+
+    String msg = request.getParameter("msg");
+    String err = request.getParameter("error");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -191,12 +194,15 @@
 
         .badge-approved { background: #dcfce7; color: #15803d; }
         .badge-pending { background: #fef3c7; color: #b45309; }
+        .badge-under_review { background: #e0f2fe; color: #0369a1; }
+        .badge-active { background: #dbeafe; color: #1d4ed8; }
+        .badge-completed { background: #f1f5f9; color: #475569; }
         .badge-rejected { background: #fee2e2; color: #b91c1c; }
 
         /* Reservation Details Grid */
         .details-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
             background: #f8fafc;
             padding: 16px;
@@ -222,6 +228,36 @@
             font-weight: 700;
             color: var(--text-dark);
         }
+
+        /* Action Toolbar */
+        .card-actions-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 14px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn-action:hover { opacity: 0.85; }
+
+        .btn-pdf { background: #0f172a; color: #ffffff; }
+        .btn-extend { background: #2563eb; color: #ffffff; }
+        .btn-cancel { background: #dc2626; color: #ffffff; }
 
         /* KYC Document Box */
         .kyc-upload-box {
@@ -323,20 +359,17 @@
 <!-- Header -->
 <div class="hero">
     <h1>My Reservations</h1>
-    <p>Track booking status, manage rental dates, and complete verification</p>
+    <p>Track booking status, upload DL documents, extend trips, and download PDF receipts</p>
 </div>
 
 <div class="container">
 
-    <%-- Messages --%>
-    <%
-        String error = (String) request.getAttribute("error");
-        String message = (String) request.getAttribute("message");
-        if (error != null) {
-    %>
-        <div class="alert alert-error"><%= error %></div>
-    <% } else if (message != null) { %>
-        <div class="alert alert-success"><%= message %></div>
+    <%-- Success/Error Alerts --%>
+    <% if (msg != null && !msg.isEmpty()) { %>
+        <div class="alert alert-success"><%= msg %></div>
+    <% } %>
+    <% if (err != null && !err.isEmpty()) { %>
+        <div class="alert alert-error"><%= err %></div>
     <% } %>
 
     <%
@@ -356,8 +389,14 @@
                 int bookingId = rs.getInt("booking_id");
                 String kycStatus = rs.getString("kyc_status");
                 if (kycStatus == null) kycStatus = "PENDING";
+
                 String deliveryType = rs.getString("delivery_type");
                 if (deliveryType == null) deliveryType = "SELF_PICKUP";
+
+                int extendedDays = 0;
+                try {
+                    extendedDays = rs.getInt("extended_days");
+                } catch (Exception ignored) {}
     %>
     <div class="booking-card">
         <div class="card-header">
@@ -370,8 +409,8 @@
             </div>
 
             <div class="status-group">
-                <span class="badge <%= "APPROVED".equalsIgnoreCase(kycStatus) ? "badge-approved" : ("REJECTED".equalsIgnoreCase(kycStatus) ? "badge-rejected" : "badge-pending") %>">
-                    KYC: <%= kycStatus %>
+                <span class="badge badge-<%= kycStatus.toLowerCase() %>">
+                    KYC: <%= kycStatus.replace("_", " ") %>
                 </span>
                 <span class="badge badge-approved" style="background:#e0f2fe; color:#0369a1;">
                     Booking #<%= bookingId %>
@@ -390,7 +429,7 @@
             </div>
             <div class="detail-item">
                 <span class="detail-label">Duration</span>
-                <span class="detail-value"><%= rs.getInt("total_days") %> Days</span>
+                <span class="detail-value"><%= rs.getInt("total_days") %> Days <%= extendedDays > 0 ? "(+" + extendedDays + " Ext)" : "" %></span>
             </div>
             <div class="detail-item">
                 <span class="detail-label">Handover Mode</span>
@@ -402,7 +441,8 @@
             </div>
         </div>
 
-        <% if (!"APPROVED".equalsIgnoreCase(kycStatus)) { %>
+        <%-- KYC Upload Section --%>
+        <% if (!"APPROVED".equalsIgnoreCase(kycStatus) && !"ACTIVE".equalsIgnoreCase(kycStatus) && !"COMPLETED".equalsIgnoreCase(kycStatus) && !"REJECTED".equalsIgnoreCase(kycStatus)) { %>
         <div class="kyc-upload-box">
             <div class="kyc-title">📄 Verification Required for Vehicle Handover</div>
             <div class="kyc-sub">Please submit your Driving License details to get your reservation confirmed by DriveEazy.</div>
@@ -415,6 +455,35 @@
             </form>
         </div>
         <% } %>
+
+        <%-- Action Controls Toolbar --%>
+        <div class="card-actions-bar">
+            <!-- 1. Download PDF Invoice Button -->
+            <a href="GenerateInvoiceServlet?bookingId=<%= bookingId %>" class="btn-action btn-pdf">
+                📄 Download Invoice PDF
+            </a>
+
+            <!-- 2. Extend Trip Form (Allowed for APPROVED or ACTIVE trips) -->
+            <% if ("APPROVED".equalsIgnoreCase(kycStatus) || "ACTIVE".equalsIgnoreCase(kycStatus)) { %>
+            <form action="ExtendTripServlet" method="POST" style="display:inline-flex; gap: 6px; align-items: center;">
+                <input type="hidden" name="bookingId" value="<%= bookingId %>">
+                <input type="number" name="extraDays" min="1" max="14" value="1" style="width: 55px; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight:700;">
+                <button type="submit" class="btn-action btn-extend">
+                    ➕ Extend Trip
+                </button>
+            </form>
+            <% } %>
+
+            <!-- 3. Cancel Booking Button (Allowed for PENDING, UNDER_REVIEW, or APPROVED trips) -->
+            <% if ("PENDING".equalsIgnoreCase(kycStatus) || "UNDER_REVIEW".equalsIgnoreCase(kycStatus) || "APPROVED".equalsIgnoreCase(kycStatus)) { %>
+            <form action="CancelBookingServlet" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this reservation?');">
+                <input type="hidden" name="bookingId" value="<%= bookingId %>">
+                <button type="submit" class="btn-action btn-cancel">
+                    ✖ Cancel Booking
+                </button>
+            </form>
+            <% } %>
+        </div>
     </div>
     <%
             }

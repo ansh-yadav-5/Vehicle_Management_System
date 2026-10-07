@@ -1,4 +1,4 @@
-package example; // Change this to match your project's package structure
+package example; // Ensure this matches your package name
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -50,12 +50,21 @@ public class CreateBookingServlet extends HttpServlet {
             double pricePerDay = 0.0;
 
             try (Connection conn = DBConnection.getConnection()) {
-                String rateSql = "SELECT price_per_day FROM vehicles WHERE vehicle_id = ?";
+                // Disable autocommit for transactional integrity
+                conn.setAutoCommit(false);
+
+                // 1. Fetch vehicle rate
+                String rateSql = "SELECT price_per_day FROM vehicles WHERE vehicle_id = ? AND status = 'AVAILABLE'";
                 try (PreparedStatement stmt = conn.prepareStatement(rateSql)) {
                     stmt.setInt(1, vehicleId);
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (rs.next()) {
                             pricePerDay = rs.getDouble("price_per_day");
+                        } else {
+                            // Vehicle is already booked or unavailable
+                            conn.rollback();
+                            response.sendRedirect("catalog.jsp");
+                            return;
                         }
                     }
                 }
@@ -65,6 +74,7 @@ public class CreateBookingServlet extends HttpServlet {
                     totalPrice += 300.0;
                 }
 
+                // 2. Insert new reservation into 'bookings' table
                 String insertSql = "INSERT INTO bookings (user_id, vehicle_id, pickup_date, return_date, total_days, total_price, delivery_type, kyc_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')";
                 try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
                     stmt.setInt(1, userId);
@@ -76,6 +86,16 @@ public class CreateBookingServlet extends HttpServlet {
                     stmt.setString(7, deliveryType);
                     stmt.executeUpdate();
                 }
+
+                // 3. Mark vehicle as 'BOOKED' so it disappears from catalog.jsp
+                String updateVehicleSql = "UPDATE vehicles SET status = 'BOOKED' WHERE vehicle_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(updateVehicleSql)) {
+                    stmt.setInt(1, vehicleId);
+                    stmt.executeUpdate();
+                }
+
+                // Commit transaction
+                conn.commit();
             }
 
             response.sendRedirect("my_bookings.jsp");
