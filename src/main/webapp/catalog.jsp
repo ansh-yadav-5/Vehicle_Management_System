@@ -375,7 +375,7 @@
     <div class="nav-actions">
         <% if (userName != null) { %>
             <a href="my_bookings.jsp" class="nav-btn">📋 My Reservations</a>
-            <a href="index.jsp" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
+            <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
         <% } else { %>
             <a href="index.jsp" class="nav-btn">Login / Sign Up</a>
         <% } %>

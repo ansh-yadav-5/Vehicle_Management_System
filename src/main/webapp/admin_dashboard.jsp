@@ -351,7 +351,7 @@
     <div class="nav-right">
         <a href="admin_bookings.jsp" class="nav-btn">📋 Manage Customer Bookings</a>
         <a href="catalog.jsp" class="nav-btn" target="_blank">🌐 Live Catalog View</a>
-        <a href="index.jsp" class="logout-link">Logout</a>
+        <a href="LogoutServlet" class="logout-link">Logout</a>
     </div>
 </div>
 

@@ -37,7 +37,7 @@
     <div style="font-size:20px; font-weight:bold;">DriveEazy <span style="font-weight:300;">Admin</span></div>
     <div>
         <a href="admin_dashboard.jsp" style="color:#fff; text-decoration:none; margin-right:15px;">Dashboard</a>
-        <a href="index.jsp" style="color:#ef4444; text-decoration:none; font-weight:bold;">Logout</a>
+        <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px; margin-left: 15px;">Logout</a>
     </div>
 </div>
 
