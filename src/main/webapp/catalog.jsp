@@ -1,20 +1,43 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.sql.*" %>
+<%@ page import="java.time.LocalDate" %>
 <%@ page import="example.DBConnection" %>
 <%
     String userName = (String) session.getAttribute("userName");
     Integer userId = (Integer) session.getAttribute("userId");
 
+    if (userName == null || userId == null) {
+        response.sendRedirect("index.jsp");
+        return;
+    }
+
+    // Auto-release expired bookings on catalog page view
+    try (Connection conn = DBConnection.getConnection()) {
+        if (conn != null) {
+            String autoReleaseSql = 
+                "UPDATE vehicles v " +
+                "JOIN bookings b ON v.vehicle_id = b.vehicle_id " +
+                "SET v.status = 'AVAILABLE', b.kyc_status = 'COMPLETED' " +
+                "WHERE b.kyc_status IN ('APPROVED', 'ACTIVE') AND b.return_date < CURRENT_DATE()";
+                
+            try (PreparedStatement stmt = conn.prepareStatement(autoReleaseSql)) {
+                stmt.executeUpdate();
+            }
+        }
+    } catch (Throwable t) {
+        t.printStackTrace();
+    }
+
     String categoryFilter = request.getParameter("category");
-    String transmissionFilter = request.getParameter("transmission");
     String searchQuery = request.getParameter("search");
+    String todayDate = LocalDate.now().toString();
 %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveEazy - Self Drive Vehicle Fleet</title>
+    <title>DriveEazy - Vehicle Fleet Catalog</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -36,10 +59,9 @@
         body {
             background-color: var(--bg-gray);
             color: var(--text-dark);
-            padding-bottom: 60px;
         }
 
-        /* Navbar */
+        /* Top Bar */
         .navbar {
             background: #000000;
             color: #ffffff;
@@ -87,84 +109,115 @@
             background: rgba(255,255,255,0.1);
         }
 
-        /* Hero Banner & Filters */
-        .hero {
+        /* Hero Header */
+        .catalog-hero {
             background: linear-gradient(180deg, #000000 0%, #0f172a 100%);
             color: #ffffff;
-            padding: 40px 5% 50px 5%;
+            padding: 40px 5% 60px 5%;
             text-align: center;
         }
 
-        .hero h1 {
-            font-size: 36px;
+        .catalog-hero h1 {
+            font-size: 32px;
             font-weight: 800;
             margin-bottom: 8px;
         }
 
-        .hero p {
+        .catalog-hero p {
             color: #94a3b8;
-            font-size: 16px;
-            margin-bottom: 25px;
+            font-size: 15px;
         }
 
-        .search-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 12px 16px;
-            border-radius: 14px;
+        /* Main Wrapper Card */
+        .main-catalog-wrapper {
+            max-width: 1240px;
+            margin: -35px auto 40px auto;
+            padding: 24px;
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        }
+
+        /* Filter Toolbar */
+        .filter-bar {
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            max-width: 420px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            outline: none;
+            font-size: 14px;
+            background: #ffffff;
+            color: var(--text-dark);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            background: #ffffff;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-btn:hover {
+            background: #1e293b;
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
-        .search-container input, .search-container select {
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
-            outline: none;
-            background: #ffffff;
-            color: #0f172a;
-        }
-
-        .search-container input[type="text"] {
-            flex: 2;
-            min-width: 180px;
-        }
-
-        .search-container select {
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .btn-search {
-            background: var(--accent);
-            color: #ffffff;
+        .pill {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 700;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: opacity 0.2s;
+            background: #f1f5f9;
+            color: var(--text-muted);
+            transition: all 0.2s;
         }
 
-        .btn-search:hover {
-            opacity: 0.9;
+        .pill.active, .pill:hover {
+            background: #000000;
+            color: #ffffff;
         }
 
-        /* Container & Cards Grid */
-        .container {
-            max-width: 1250px;
-            margin: 30px auto 0 auto;
-            padding: 0 20px;
-        }
-
-        .fleet-grid {
+        /* Grid Layout */
+        .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 24px;
         }
 
@@ -173,40 +226,43 @@
             border-radius: 16px;
             overflow: hidden;
             border: 1px solid var(--card-border);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
             display: flex;
             flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .vehicle-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+            box-shadow: 0 12px 20px -5px rgba(0,0,0,0.08);
         }
 
-        .card-img-container {
-            width: 100%;
-            height: 180px;
-            background: #f1f5f9;
+        .card-img-wrapper {
             position: relative;
+            height: 190px;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
         }
 
-        .card-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .card-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
         .category-badge {
             position: absolute;
             top: 12px;
             left: 12px;
-            background: rgba(15, 23, 42, 0.85);
+            background: #000000;
             color: #ffffff;
-            font-size: 10px;
-            font-weight: 800;
             padding: 4px 10px;
             border-radius: 20px;
+            font-size: 10px;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -215,69 +271,61 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            flex: 1;
         }
 
-        .card-title {
+        .brand-subtitle {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .vehicle-title {
             font-size: 18px;
             font-weight: 800;
             color: var(--text-dark);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
-        .card-brand {
-            font-size: 12px;
+        .vehicle-desc {
+            font-size: 13px;
             color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 12px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 38px;
         }
 
-        .spec-pills {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
+        .card-price {
+            font-size: 20px;
+            font-weight: 800;
+            color: #16a34a;
             margin-bottom: 16px;
         }
 
-        .spec-pill {
-            background: #f1f5f9;
-            color: #475569;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 6px;
-        }
-
-        .pricing-section {
-            margin-top: auto;
-            border-top: 1px solid #f1f5f9;
-            padding-top: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .price-tag {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--text-dark);
-        }
-
-        .price-tag span {
+        .card-price span {
             font-size: 12px;
             color: var(--text-muted);
             font-weight: 600;
         }
 
         .btn-book {
+            width: 100%;
             background: #000000;
             color: #ffffff;
             border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 12px;
+            border-radius: 10px;
             font-weight: 700;
+            font-size: 14px;
             cursor: pointer;
+            margin-top: auto;
             transition: background 0.2s;
         }
 
@@ -285,253 +333,351 @@
             background: #1e293b;
         }
 
-        /* Booking Modal */
+        /* Modal Overlay */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.6);
             z-index: 200;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             padding: 20px;
         }
 
         .modal-card {
             background: #ffffff;
+            border-radius: 20px;
             width: 100%;
-            max-width: 480px;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+            max-width: 420px;
+            padding: 28px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 20px;
         }
 
-        .modal-title {
-            font-size: 18px;
-            font-weight: 800;
+        .modal-header h3 { font-size: 18px; font-weight: 800; }
+        .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-size: 14px;
         }
 
-        .btn-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--text-muted);
-        }
-
-        .modal-form .form-group {
-            margin-bottom: 14px;
-        }
-
-        .modal-form label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .modal-form input, .modal-form select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .btn-confirm-booking {
-            width: 100%;
+        /* HOW TO BOOK SECTION - FIXED GRID */
+        .how-it-works-section {
             background: #000000;
             color: #ffffff;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 10px;
+            padding: 60px 5%;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .how-it-works-container { 
+            max-width: 1240px; 
+            margin: 0 auto; 
+        }
+
+        .section-header { 
+            text-align: center; 
+            margin-bottom: 48px; 
+        }
+
+        .section-header h2 { 
+            font-size: 28px; 
+            font-weight: 800; 
+            color: #ffffff; 
+            margin-bottom: 8px; 
+            letter-spacing: -0.5px; 
+        }
+
+        .section-header p { 
+            color: #94a3b8; 
+            font-size: 15px; 
+        }
+
+        /* 4 Column Layout for Steps */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .steps-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step-card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 24px 20px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .step-card:hover { 
+            transform: translateY(-4px); 
+            border-color: #22c55e; 
+        }
+
+        .step-number {
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 36px; 
+            height: 36px;
+            background: rgba(34, 197, 94, 0.15); 
+            color: #22c55e; 
+            border-radius: 10px; 
+            font-size: 14px; 
+            font-weight: 800; 
+            margin-bottom: 16px;
+        }
+
+        .step-icon { 
+            font-size: 28px; 
+            margin-bottom: 12px; 
+            display: block; 
+        }
+
+        .step-title { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: #ffffff; 
+            margin-bottom: 8px; 
+        }
+
+        .step-desc { 
+            font-size: 13px; 
+            color: #94a3b8; 
+            line-height: 1.5; 
+        }
+
+        .empty-catalog {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: #ffffff;
+            border-radius: 16px;
         }
     </style>
 </head>
 <body>
 
-<!-- Top Navigation -->
+<!-- Navbar -->
 <div class="navbar">
     <a href="catalog.jsp" class="brand">Drive<span>Eazy</span></a>
     <div class="nav-actions">
-        <% if (userName != null) { %>
-            <a href="my_bookings.jsp" class="nav-btn">📋 My Reservations</a>
-            <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
-        <% } else { %>
-            <a href="index.jsp" class="nav-btn">Login / Sign Up</a>
-        <% } %>
+        <a href="my_bookings.jsp" class="nav-btn">📋 My Reservations</a>
+        <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
     </div>
 </div>
 
-<!-- Search & Filter Banner -->
-<div class="hero">
-    <h1>Find Your Perfect Self-Drive Vehicle</h1>
-    <p>Sanitized, well-maintained cars & bikes available for instant booking</p>
-
-    <form action="catalog.jsp" method="GET" class="search-container">
-        <input type="text" name="search" placeholder="Search by model or brand (e.g. City, Thar)..." value="<%= searchQuery != null ? searchQuery : "" %>">
-
-        <select name="category">
-            <option value="">All Categories</option>
-            <option value="CAR" <%= "CAR".equals(categoryFilter) ? "selected" : "" %>>Cars</option>
-            <option value="BIKE" <%= "BIKE".equals(categoryFilter) ? "selected" : "" %>>Bikes</option>
-        </select>
-
-        <select name="transmission">
-            <option value="">All Transmission</option>
-            <option value="MANUAL" <%= "MANUAL".equals(transmissionFilter) ? "selected" : "" %>>Manual</option>
-            <option value="AUTOMATIC" <%= "AUTOMATIC".equals(transmissionFilter) ? "selected" : "" %>>Automatic</option>
-        </select>
-
-        <button type="submit" class="btn-search">Search Fleet</button>
-    </form>
+<!-- Hero Banner -->
+<div class="catalog-hero">
+    <h1>Explore Available Fleet</h1>
+    <p>Select your dream car or bike for self-drive travel across India</p>
 </div>
 
-<!-- Fleet Display Grid -->
-<div class="container">
-    <div class="fleet-grid">
+<!-- Main Section Wrapper -->
+<div class="main-catalog-wrapper">
+
+    <!-- Filter & Search Toolbar -->
+    <div class="filter-bar">
+        <form action="catalog.jsp" method="GET" class="search-form">
+            <input type="text" name="search" class="search-input" placeholder="Search by brand or title..." value="<%= searchQuery != null ? searchQuery : "" %>">
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+
+        <div class="category-pills">
+            <a href="catalog.jsp" class="pill <%= (categoryFilter == null || categoryFilter.isEmpty()) ? "active" : "" %>">All Vehicles</a>
+            <a href="catalog.jsp?category=Car" class="pill <%= "Car".equals(categoryFilter) ? "active" : "" %>">Cars</a>
+            <a href="catalog.jsp?category=Bike" class="pill <%= "Bike".equals(categoryFilter) ? "active" : "" %>">Bikes / Scooters</a>
+        </div>
+    </div>
+
+    <!-- Vehicle Catalog Grid -->
+    <div class="grid-container">
         <%
+            boolean hasVehicles = false;
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "SELECT * FROM vehicles WHERE status = 'AVAILABLE'";
+                if (conn != null) {
+                    String sql = "SELECT * FROM vehicles WHERE status = 'AVAILABLE'";
 
-                if (categoryFilter != null && !categoryFilter.isEmpty()) {
-                    sql += " AND category = ?";
-                }
-                if (transmissionFilter != null && !transmissionFilter.isEmpty()) {
-                    sql += " AND transmission = ?";
-                }
-                if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                    sql += " AND (title LIKE ? OR brand LIKE ?)";
-                }
+                    if (categoryFilter != null && !categoryFilter.isEmpty()) {
+                        sql += " AND category = ?";
+                    }
+                    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                        sql += " AND (title LIKE ? OR brand LIKE ?)";
+                    }
 
-                sql += " ORDER BY vehicle_id DESC";
+                    PreparedStatement stmt = conn.prepareStatement(sql);
+                    int paramIndex = 1;
 
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                int paramIndex = 1;
+                    if (categoryFilter != null && !categoryFilter.isEmpty()) {
+                        stmt.setString(paramIndex++, categoryFilter);
+                    }
+                    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                        String searchPattern = "%" + searchQuery.trim() + "%";
+                        stmt.setString(paramIndex++, searchPattern);
+                        stmt.setString(paramIndex++, searchPattern);
+                    }
 
-                if (categoryFilter != null && !categoryFilter.isEmpty()) {
-                    stmt.setString(paramIndex++, categoryFilter);
-                }
-                if (transmissionFilter != null && !transmissionFilter.isEmpty()) {
-                    stmt.setString(paramIndex++, transmissionFilter);
-                }
-                if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                    String q = "%" + searchQuery.trim() + "%";
-                    stmt.setString(paramIndex++, q);
-                    stmt.setString(paramIndex++, q);
-                }
+                    ResultSet rs = stmt.executeQuery();
 
-                ResultSet rs = stmt.executeQuery();
-                boolean hasResults = false;
+                    while (rs.next()) {
+                        hasVehicles = true;
+                        int vehicleId = rs.getInt("vehicle_id");
+                        String title = rs.getString("title");
+                        String brand = rs.getString("brand");
+                        String category = rs.getString("category");
+                        double pricePerDay = rs.getDouble("price_per_day");
+                        String imagePath = rs.getString("image_path");
 
-                while (rs.next()) {
-                    hasResults = true;
-                    int vId = rs.getInt("vehicle_id");
-                    String title = rs.getString("title");
-                    String brand = rs.getString("brand");
-                    String category = rs.getString("category");
-                    String transmission = rs.getString("transmission");
-                    String fuelType = rs.getString("fuel_type");
-                    double price = rs.getDouble("price_per_day");
-                    String imagePath = rs.getString("image_path");
+                        String description = "";
+                        try {
+                            description = rs.getString("description");
+                        } catch (Exception ignored) {}
+
+                        if (description == null || description.trim().isEmpty()) {
+                            description = "Premium self-drive " + category.toLowerCase() + " offering superior performance and comfort for long drives.";
+                        }
         %>
         <div class="vehicle-card">
-            <div class="card-img-container">
+            <div class="card-img-wrapper">
                 <span class="category-badge"><%= category %></span>
-                <img src="<%= imagePath %>" alt="<%= title %>" onerror="this.src='https://via.placeholder.com/280x180?text=DriveEazy+Vehicle';">
+                <img src="<%= imagePath %>" class="card-img" alt="<%= title %>" onerror="this.src='https://via.placeholder.com/300x180?text=Vehicle+Image';">
             </div>
             <div class="card-body">
-                <div class="card-title"><%= title %></div>
-                <div class="card-brand"><%= brand %></div>
+                <div class="brand-subtitle"><%= brand %></div>
+                <div class="vehicle-title"><%= title %></div>
+                
+                <div class="vehicle-desc"><%= description %></div>
 
-                <div class="spec-pills">
-                    <% if (transmission != null) { %><span class="spec-pill">⚙️ <%= transmission %></span><% } %>
-                    <% if (fuelType != null) { %><span class="spec-pill">⛽ <%= fuelType %></span><% } %>
-                    <span class="spec-pill">🛡️ Zero Deposit</span>
-                </div>
-
-                <div class="pricing-section">
-                    <div class="price-tag">₹<%= (int)price %> <span>/ day</span></div>
-                    <% if (userName != null) { %>
-                        <button class="btn-book" onclick="openBookingModal(<%= vId %>, '<%= title %>', <%= price %>)">Book Now</button>
-                    <% } else { %>
-                        <a href="index.jsp" class="btn-book" style="text-decoration:none;">Login to Book</a>
-                    <% } %>
-                </div>
+                <div class="card-price">₹<%= String.format("%.2f", pricePerDay) %> <span>/ day</span></div>
+                <button class="btn-book" onclick="openBookingModal(<%= vehicleId %>, '<%= title.replace("'", "\\'") %>', <%= pricePerDay %>)">Book Now</button>
             </div>
         </div>
         <%
+                    }
                 }
-                if (!hasResults) {
+
+                if (!hasVehicles) {
         %>
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: white; border-radius: 16px; border: 1px solid var(--card-border);">
-                <h3>No Vehicles Available</h3>
-                <p style="color: var(--text-muted); margin-top: 6px;">Try adjusting your search criteria or category filters.</p>
-            </div>
+        <div class="empty-catalog">
+            <h3>No Available Vehicles Found</h3>
+            <p style="color: #64748b; margin-top: 6px;">Try adjusting your search criteria or category filter.</p>
+        </div>
         <%
                 }
             } catch (Exception e) {
-                out.println("<p style='color:red;'>Error loading fleet: " + e.getMessage() + "</p>");
+                out.println("<div class='empty-catalog' style='color:red;'>Error loading catalog: " + e.getMessage() + "</div>");
             }
         %>
     </div>
+
 </div>
 
-<!-- Modal Dialog for Handover & Date Selection -->
-<div class="modal-overlay" id="bookingModal">
+<!-- Modal Popup for Reservation Dates -->
+<div id="bookingModal" class="modal-overlay">
     <div class="modal-card">
         <div class="modal-header">
-            <div class="modal-title" id="modalVehicleTitle">Reserve Vehicle</div>
-            <button class="btn-close" onclick="closeBookingModal()">&times;</button>
+            <h3 id="modalVehicleTitle">Reserve Vehicle</h3>
+            <button class="close-btn" onclick="closeBookingModal()">&times;</button>
         </div>
 
-        <form action="CreateBookingServlet" method="POST" class="modal-form">
+        <form action="CreateBookingServlet" method="POST">
             <input type="hidden" name="vehicleId" id="modalVehicleId">
 
             <div class="form-group">
                 <label>Pickup Date</label>
-                <input type="date" name="pickupDate" required>
+                <input type="date" name="pickupDate" min="<%= todayDate %>" required>
             </div>
 
             <div class="form-group">
                 <label>Return Date</label>
-                <input type="date" name="returnDate" required>
+                <input type="date" name="returnDate" min="<%= todayDate %>" required>
             </div>
 
             <div class="form-group">
-                <label>Handover Mode</label>
+                <label>Handover Choice</label>
                 <select name="deliveryType" required>
-                    <option value="SELF_PICKUP">Self Pickup (DriveEazy Hub)</option>
+                    <option value="SELF_PICKUP">Self Pickup (Hub Center)</option>
                     <option value="DOORSTEP">Doorstep Delivery (+₹300)</option>
                 </select>
             </div>
 
-            <button type="submit" class="btn-confirm-booking">Confirm Reservation</button>
+            <button type="submit" class="btn-book" style="margin-top: 10px;">Confirm & Create Booking</button>
         </form>
     </div>
 </div>
 
+<!-- HOW TO BOOK SECTION - ALL 4 STEPS IN ONE ROW -->
+<div class="how-it-works-section">
+    <div class="how-it-works-container">
+        
+        <div class="section-header">
+            <h2>How to Book Your Drive</h2>
+            <p>Rent your favorite car or bike in 4 simple steps</p>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <span class="step-number">01</span>
+                <span class="step-icon">🏎️</span>
+                <div class="step-title">Choose Your Vehicle</div>
+                <div class="step-desc">
+                    Browse our available fleet in the catalog above. Filter by brand, category, or daily rates to find your perfect match.
+                </div>
+            </div>
+
+            <div class="step-card">
+                <span class="step-number">02</span>
+                <span class="step-icon">📅</span>
+                <div class="step-title">Select Dates & Mode</div>
+                <div class="step-desc">
+                    Pick your pickup and return dates along with your preferred handover option (Self Pickup or Doorstep Delivery).
+                </div>
+            </div>
+
+            <div class="step-card">
+                <span class="step-number">03</span>
+                <span class="step-icon">📄</span>
+                <div class="step-title">Upload Driving License</div>
+                <div class="step-desc">
+                    Head to <strong>My Reservations</strong> to submit your DL number and document image for quick admin verification.
+                </div>
+            </div>
+
+            <div class="step-card">
+                <span class="step-number">04</span>
+                <span class="step-icon">🔑</span>
+                <div class="step-title">Get Keys & Drive</div>
+                <div class="step-desc">
+                    Once verified, receive your vehicle keys, enjoy your trip, and manage extension or PDF invoice directly from your portal.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 <script>
-    function openBookingModal(vehicleId, title, price) {
+    function openBookingModal(vehicleId, title, rate) {
         document.getElementById('modalVehicleId').value = vehicleId;
         document.getElementById('modalVehicleTitle').innerText = 'Reserve ' + title;
         document.getElementById('bookingModal').style.display = 'flex';
@@ -539,6 +685,13 @@
 
     function closeBookingModal() {
         document.getElementById('bookingModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        var modal = document.getElementById('bookingModal');
+        if (event.target === modal) {
+            closeBookingModal();
+        }
     }
 </script>
 

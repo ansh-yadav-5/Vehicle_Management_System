@@ -199,7 +199,7 @@
         .badge-completed { background: #f1f5f9; color: #475569; }
         .badge-rejected { background: #fee2e2; color: #b91c1c; }
 
-        /* Reservation Details Grid */
+        /* Details Grid */
         .details-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -229,7 +229,7 @@
             color: var(--text-dark);
         }
 
-        /* Action Toolbar */
+        /* Toolbar */
         .card-actions-bar {
             display: flex;
             gap: 12px;
@@ -259,7 +259,7 @@
         .btn-extend { background: #2563eb; color: #ffffff; }
         .btn-cancel { background: #dc2626; color: #ffffff; }
 
-        /* KYC Document Box */
+        /* KYC Form */
         .kyc-upload-box {
             background: #ffffff;
             border: 1px dashed #cbd5e1;
@@ -315,10 +315,6 @@
             transition: background 0.2s;
         }
 
-        .btn-upload:hover {
-            background: #1e293b;
-        }
-
         .empty-state {
             background: #ffffff;
             border-radius: 16px;
@@ -327,10 +323,7 @@
             border: 1px solid var(--card-border);
         }
 
-        .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
+        .empty-state h3 { font-size: 20px; margin-bottom: 8px; }
 
         .btn-browse {
             display: inline-block;
@@ -441,7 +434,7 @@
             </div>
         </div>
 
-        <%-- KYC Upload Section --%>
+        <%-- KYC Upload Form (Shown only before approval) --%>
         <% if (!"APPROVED".equalsIgnoreCase(kycStatus) && !"ACTIVE".equalsIgnoreCase(kycStatus) && !"COMPLETED".equalsIgnoreCase(kycStatus) && !"REJECTED".equalsIgnoreCase(kycStatus)) { %>
         <div class="kyc-upload-box">
             <div class="kyc-title">📄 Verification Required for Vehicle Handover</div>
@@ -458,12 +451,12 @@
 
         <%-- Action Controls Toolbar --%>
         <div class="card-actions-bar">
-            <!-- 1. Download PDF Invoice Button -->
+            <!-- 1. Download PDF Invoice -->
             <a href="GenerateInvoiceServlet?bookingId=<%= bookingId %>" class="btn-action btn-pdf">
                 📄 Download Invoice PDF
             </a>
 
-            <!-- 2. Extend Trip Form (Allowed for APPROVED or ACTIVE trips) -->
+            <!-- 2. Extend Trip Form (Only for APPROVED or ACTIVE trips) -->
             <% if ("APPROVED".equalsIgnoreCase(kycStatus) || "ACTIVE".equalsIgnoreCase(kycStatus)) { %>
             <form action="ExtendTripServlet" method="POST" style="display:inline-flex; gap: 6px; align-items: center;">
                 <input type="hidden" name="bookingId" value="<%= bookingId %>">
@@ -474,8 +467,8 @@
             </form>
             <% } %>
 
-            <!-- 3. Cancel Booking Button (Allowed for PENDING, UNDER_REVIEW, or APPROVED trips) -->
-            <% if ("PENDING".equalsIgnoreCase(kycStatus) || "UNDER_REVIEW".equalsIgnoreCase(kycStatus) || "APPROVED".equalsIgnoreCase(kycStatus)) { %>
+            <!-- 3. Cancel Booking Button (VISIBLE ONLY BEFORE KYC IS APPROVED) -->
+            <% if (!"APPROVED".equalsIgnoreCase(kycStatus) && !"ACTIVE".equalsIgnoreCase(kycStatus) && !"COMPLETED".equalsIgnoreCase(kycStatus) && !"REJECTED".equalsIgnoreCase(kycStatus)) { %>
             <form action="CancelBookingServlet" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this reservation?');">
                 <input type="hidden" name="bookingId" value="<%= bookingId %>">
                 <button type="submit" class="btn-action btn-cancel">

@@ -1,17 +1,15 @@
-package example;
+package example; // Ensure this matches your package name
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 @WebServlet("/CancelBookingServlet")
 public class CancelBookingServlet extends HttpServlet {
@@ -20,75 +18,83 @@ public class CancelBookingServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession();
-        Integer userId = (Integer) session.getAttribute("userId");
-
-        if (userId == null) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
             response.sendRedirect("index.jsp");
             return;
         }
 
+        int userId = (Integer) session.getAttribute("userId");
         String bookingIdStr = request.getParameter("bookingId");
 
-        if (bookingIdStr == null || bookingIdStr.isEmpty()) {
-            request.setAttribute("error", "Invalid booking request.");
-            request.getRequestDispatcher("my_bookings.jsp").forward(request, response);
-            return;
-        }
+        if (bookingIdStr != null && !bookingIdStr.trim().isEmpty()) {
+            try {
+                int bookingId = Integer.parseInt(bookingIdStr.trim());
 
-        try {
-            int bookingId = Integer.parseInt(bookingIdStr);
+                try (Connection conn = DBConnection.getConnection()) {
+                    conn.setAutoCommit(false); // Enable transaction
 
-            try (Connection conn = DBConnection.getConnection()) {
-                conn.setAutoCommit(false); // Begin transaction
+                    // 1. Fetch current status & vehicle_id for ownership verification
+                    String checkSql = "SELECT vehicle_id, kyc_status FROM bookings WHERE booking_id = ? AND user_id = ?";
+                    int vehicleId = 0;
+                    String kycStatus = "";
 
-                // 1. Fetch vehicle_id associated with this booking and confirm ownership
-                String fetchSql = "SELECT vehicle_id, booking_status FROM bookings WHERE booking_id = ? AND user_id = ? FOR UPDATE";
-                PreparedStatement fetchStmt = conn.prepareStatement(fetchSql);
-                fetchStmt.setInt(1, bookingId);
-                fetchStmt.setInt(2, userId);
-                ResultSet rs = fetchStmt.executeQuery();
+                    try (PreparedStatement stmt = conn.prepareStatement(checkSql)) {
+                        stmt.setInt(1, bookingId);
+                        stmt.setInt(2, userId);
+                        try (ResultSet rs = stmt.executeQuery()) {
+                            if (rs.next()) {
+                                vehicleId = rs.getInt("vehicle_id");
+                                kycStatus = rs.getString("kyc_status");
+                            } else {
+                                conn.rollback();
+                                response.sendRedirect("my_bookings.jsp?error=Reservation not found.");
+                                return;
+                            }
+                        }
+                    }
 
-                if (rs.next()) {
-                    String currentStatus = rs.getString("booking_status");
-
-                    if ("CANCELLED".equalsIgnoreCase(currentStatus)) {
+                    // 2. Strict Rule: Disallow cancellation if KYC is already APPROVED, ACTIVE, or COMPLETED
+                    if ("APPROVED".equalsIgnoreCase(kycStatus) || "ACTIVE".equalsIgnoreCase(kycStatus) || "COMPLETED".equalsIgnoreCase(kycStatus)) {
                         conn.rollback();
-                        request.setAttribute("error", "This booking is already cancelled.");
-                        request.getRequestDispatcher("my_bookings.jsp").forward(request, response);
+                        response.sendRedirect("my_bookings.jsp?error=Cannot cancel booking after KYC approval.");
                         return;
                     }
 
-                    int vehicleId = rs.getInt("vehicle_id");
+                    // 3. Update booking status to REJECTED (Cancelled)
+                    String cancelSql = "UPDATE bookings SET kyc_status = 'REJECTED', refund_status = 'INITIATED' WHERE booking_id = ?";
+                    try (PreparedStatement stmt = conn.prepareStatement(cancelSql)) {
+                        stmt.setInt(1, bookingId);
+                        stmt.executeUpdate();
+                    }
 
-                    // 2. Update booking status to CANCELLED
-                    String cancelSql = "UPDATE bookings SET booking_status = 'CANCELLED' WHERE booking_id = ?";
-                    PreparedStatement cancelStmt = conn.prepareStatement(cancelSql);
-                    cancelStmt.setInt(1, bookingId);
-                    cancelStmt.executeUpdate();
-
-                    // 3. Reset vehicle status back to AVAILABLE
-                    String updateVehicleSql = "UPDATE vehicles SET status = 'AVAILABLE' WHERE vehicle_id = ?";
-                    PreparedStatement updateVehicleStmt = conn.prepareStatement(updateVehicleSql);
-                    updateVehicleStmt.setInt(1, vehicleId);
-                    updateVehicleStmt.executeUpdate();
+                    // 4. Release vehicle back to AVAILABLE in catalog.jsp
+                    String releaseVehicleSql = "UPDATE vehicles SET status = 'AVAILABLE' WHERE vehicle_id = ?";
+                    try (PreparedStatement stmt = conn.prepareStatement(releaseVehicleSql)) {
+                        stmt.setInt(1, vehicleId);
+                        stmt.executeUpdate();
+                    }
 
                     conn.commit(); // Commit transaction
-                    request.setAttribute("message", "Booking #" + bookingId + " cancelled successfully. Vehicle is now available again.");
-                } else {
-                    conn.rollback();
-                    request.setAttribute("error", "Booking record not found or access denied.");
+                    response.sendRedirect("my_bookings.jsp?msg=Booking cancelled successfully. Vehicle released.");
+                    return;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.sendRedirect("my_bookings.jsp?error=Error processing cancellation: " + e.getMessage());
+                    return;
                 }
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-                request.setAttribute("error", "Database error during cancellation: " + e.getMessage());
+            } catch (NumberFormatException e) {
+                response.sendRedirect("my_bookings.jsp?error=Invalid booking ID.");
+                return;
             }
-
-        } catch (NumberFormatException e) {
-            request.setAttribute("error", "Invalid Booking ID format.");
         }
+        response.sendRedirect("my_bookings.jsp");
+    }
 
-        request.getRequestDispatcher("my_bookings.jsp").forward(request, response);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doPost(request, response);
     }
 }
