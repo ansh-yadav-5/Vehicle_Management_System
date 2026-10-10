@@ -107,6 +107,7 @@
 <body>
 
 <div class="navbar">
+    <a href="about.jsp" class="nav-btn">ℹ️ About Us</a>
     <a href="catalog.jsp" class="brand">Drive<span>Eazy</span></a>
     <a href="catalog.jsp" class="nav-link">Explore Fleet Catalog →</a>
 </div>

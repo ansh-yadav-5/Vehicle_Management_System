@@ -229,6 +229,7 @@
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
             display: flex;
             flex-direction: column;
+            cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
@@ -333,25 +334,27 @@
             background: #1e293b;
         }
 
-        /* Modal Overlay */
+        /* Extended Vehicle Details Modal */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             z-index: 200;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            overflow-y: auto;
         }
 
         .modal-card {
             background: #ffffff;
             border-radius: 20px;
             width: 100%;
-            max-width: 420px;
+            max-width: 800px;
             padding: 28px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+            position: relative;
         }
 
         .modal-header {
@@ -359,18 +362,93 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
         }
 
-        .modal-header h3 { font-size: 18px; font-weight: 800; }
-        .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+        .modal-header h3 { font-size: 20px; font-weight: 800; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
+
+        .modal-body-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-body-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-vehicle-preview {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid var(--card-border);
+        }
+
+        .modal-vehicle-img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        .modal-info-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+
+        .info-tag {
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .modal-vehicle-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .modal-form-side {
+            display: flex;
+            flex-direction: column;
+        }
 
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
         .form-group input, .form-group select {
-            width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-size: 14px;
+            width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; outline: none; font-size: 14px;
         }
 
-        /* HOW TO BOOK SECTION - FIXED GRID */
+        .price-summary-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .price-summary-box .label { font-size: 13px; font-weight: 700; color: #166534; }
+        .price-summary-box .val { font-size: 20px; font-weight: 800; color: #15803d; }
+
+        /* HOW TO BOOK SECTION */
         .how-it-works-section {
             background: #000000;
             color: #ffffff;
@@ -379,30 +457,11 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .how-it-works-container { 
-            max-width: 1240px; 
-            margin: 0 auto; 
-        }
+        .how-it-works-container { max-width: 1240px; margin: 0 auto; }
+        .section-header { text-align: center; margin-bottom: 48px; }
+        .section-header h2 { font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .section-header p { color: #94a3b8; font-size: 15px; }
 
-        .section-header { 
-            text-align: center; 
-            margin-bottom: 48px; 
-        }
-
-        .section-header h2 { 
-            font-size: 28px; 
-            font-weight: 800; 
-            color: #ffffff; 
-            margin-bottom: 8px; 
-            letter-spacing: -0.5px; 
-        }
-
-        .section-header p { 
-            color: #94a3b8; 
-            font-size: 15px; 
-        }
-
-        /* 4 Column Layout for Steps */
         .steps-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -410,15 +469,11 @@
         }
 
         @media (max-width: 1024px) {
-            .steps-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .steps-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 640px) {
-            .steps-grid {
-                grid-template-columns: 1fr;
-            }
+            .steps-grid { grid-template-columns: 1fr; }
         }
 
         .step-card {
@@ -429,43 +484,16 @@
             transition: transform 0.2s ease, border-color 0.2s ease;
         }
 
-        .step-card:hover { 
-            transform: translateY(-4px); 
-            border-color: #22c55e; 
-        }
+        .step-card:hover { transform: translateY(-4px); border-color: #22c55e; }
 
         .step-number {
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            width: 36px; 
-            height: 36px;
-            background: rgba(34, 197, 94, 0.15); 
-            color: #22c55e; 
-            border-radius: 10px; 
-            font-size: 14px; 
-            font-weight: 800; 
-            margin-bottom: 16px;
+            display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+            background: rgba(34, 197, 94, 0.15); color: #22c55e; border-radius: 10px; font-size: 14px; font-weight: 800; margin-bottom: 16px;
         }
 
-        .step-icon { 
-            font-size: 28px; 
-            margin-bottom: 12px; 
-            display: block; 
-        }
-
-        .step-title { 
-            font-size: 16px; 
-            font-weight: 700; 
-            color: #ffffff; 
-            margin-bottom: 8px; 
-        }
-
-        .step-desc { 
-            font-size: 13px; 
-            color: #94a3b8; 
-            line-height: 1.5; 
-        }
+        .step-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+        .step-title { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+        .step-desc { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 
         .empty-catalog {
             grid-column: 1 / -1;
@@ -482,6 +510,7 @@
 <div class="navbar">
     <a href="catalog.jsp" class="brand">Drive<span>Eazy</span></a>
     <div class="nav-actions">
+    <a href="about.jsp" class="nav-btn">ℹ️ About Us</a>
         <a href="my_bookings.jsp" class="nav-btn">📋 My Reservations</a>
         <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
     </div>
@@ -557,7 +586,8 @@
                             description = "Premium self-drive " + category.toLowerCase() + " offering superior performance and comfort for long drives.";
                         }
         %>
-        <div class="vehicle-card">
+        <!-- Vehicle Card (Clickable to open full details modal) -->
+        <div class="vehicle-card" onclick="openVehicleDetailsModal(<%= vehicleId %>, '<%= title.replace("'", "\\'") %>', '<%= brand.replace("'", "\\'") %>', '<%= category %>', <%= pricePerDay %>, '<%= imagePath %>', '<%= description.replace("'", "\\'").replace("\n", " ") %>')">
             <div class="card-img-wrapper">
                 <span class="category-badge"><%= category %></span>
                 <img src="<%= imagePath %>" class="card-img" alt="<%= title %>" onerror="this.src='https://via.placeholder.com/300x180?text=Vehicle+Image';">
@@ -565,11 +595,11 @@
             <div class="card-body">
                 <div class="brand-subtitle"><%= brand %></div>
                 <div class="vehicle-title"><%= title %></div>
-                
+
                 <div class="vehicle-desc"><%= description %></div>
 
                 <div class="card-price">₹<%= String.format("%.2f", pricePerDay) %> <span>/ day</span></div>
-                <button class="btn-book" onclick="openBookingModal(<%= vehicleId %>, '<%= title.replace("'", "\\'") %>', <%= pricePerDay %>)">Book Now</button>
+                <button class="btn-book">View Details & Book</button>
             </div>
         </div>
         <%
@@ -592,44 +622,71 @@
 
 </div>
 
-<!-- Modal Popup for Reservation Dates -->
-<div id="bookingModal" class="modal-overlay">
+<!-- Expanded Vehicle Details & Booking Modal -->
+<div id="vehicleModal" class="modal-overlay">
     <div class="modal-card">
         <div class="modal-header">
-            <h3 id="modalVehicleTitle">Reserve Vehicle</h3>
-            <button class="close-btn" onclick="closeBookingModal()">&times;</button>
+            <div>
+                <span id="modalBrandSubtitle" style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase;">BRAND</span>
+                <h3 id="modalVehicleTitle">Vehicle Title</h3>
+            </div>
+            <button class="close-btn" onclick="closeVehicleModal()">&times;</button>
         </div>
 
-        <form action="CreateBookingServlet" method="POST">
-            <input type="hidden" name="vehicleId" id="modalVehicleId">
+        <div class="modal-body-grid">
+            <!-- Left Side: Vehicle Info & Image -->
+            <div class="modal-vehicle-preview">
+                <img id="modalVehicleImg" src="" class="modal-vehicle-img" alt="Vehicle Image">
 
-            <div class="form-group">
-                <label>Pickup Date</label>
-                <input type="date" name="pickupDate" min="<%= todayDate %>" required>
+                <div class="modal-info-pills">
+                    <span class="info-tag" id="modalCategoryTag">Category: SUV</span>
+                    <span class="info-tag" style="background:#dcfce7; color:#15803d;" id="modalRateTag">₹0.00 / Day</span>
+                </div>
+
+                <div class="modal-vehicle-desc" id="modalVehicleDesc">
+                    Detailed vehicle specs and comfort highlights will appear here.
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Return Date</label>
-                <input type="date" name="returnDate" min="<%= todayDate %>" required>
-            </div>
+            <!-- Right Side: Booking Dates & Delivery Form -->
+            <div class="modal-form-side">
+                <form action="CreateBookingServlet" method="POST" id="bookingForm">
+                    <input type="hidden" name="vehicleId" id="modalVehicleId">
 
-            <div class="form-group">
-                <label>Handover Choice</label>
-                <select name="deliveryType" required>
-                    <option value="SELF_PICKUP">Self Pickup (Hub Center)</option>
-                    <option value="DOORSTEP">Doorstep Delivery (+₹300)</option>
-                </select>
-            </div>
+                    <div class="form-group">
+                        <label>Pickup Date</label>
+                        <input type="date" name="pickupDate" id="pickupDate" min="<%= todayDate %>" value="<%= todayDate %>" required onchange="calculatePrice()">
+                    </div>
 
-            <button type="submit" class="btn-book" style="margin-top: 10px;">Confirm & Create Booking</button>
-        </form>
+                    <div class="form-group">
+                        <label>Return Date</label>
+                        <input type="date" name="returnDate" id="returnDate" min="<%= todayDate %>" value="<%= todayDate %>" required onchange="calculatePrice()">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Handover Choice</label>
+                        <select name="deliveryType" id="deliveryType" required onchange="calculatePrice()">
+                            <option value="SELF_PICKUP">Self Pickup (Hub Center - Free)</option>
+                            <option value="DOORSTEP">Doorstep Delivery (+₹300)</option>
+                        </select>
+                    </div>
+
+                    <div class="price-summary-box">
+                        <span class="label">Estimated Total:</span>
+                        <span class="val" id="totalPriceDisplay">₹0.00</span>
+                    </div>
+
+                    <button type="submit" class="btn-book">Confirm & Create Reservation</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- HOW TO BOOK SECTION - ALL 4 STEPS IN ONE ROW -->
+<!-- HOW TO BOOK SECTION -->
 <div class="how-it-works-section">
     <div class="how-it-works-container">
-        
+
         <div class="section-header">
             <h2>How to Book Your Drive</h2>
             <p>Rent your favorite car or bike in 4 simple steps</p>
@@ -677,20 +734,56 @@
 </div>
 
 <script>
-    function openBookingModal(vehicleId, title, rate) {
-        document.getElementById('modalVehicleId').value = vehicleId;
-        document.getElementById('modalVehicleTitle').innerText = 'Reserve ' + title;
-        document.getElementById('bookingModal').style.display = 'flex';
+    let currentDailyRate = 0;
+
+    function openVehicleDetailsModal(id, title, brand, category, rate, imagePath, desc) {
+        currentDailyRate = rate;
+        document.getElementById('modalVehicleId').value = id;
+        document.getElementById('modalBrandSubtitle').innerText = brand;
+        document.getElementById('modalVehicleTitle').innerText = title;
+        document.getElementById('modalCategoryTag').innerText = 'Category: ' + category;
+        document.getElementById('modalRateTag').innerText = '₹' + rate.toFixed(2) + ' / Day';
+        document.getElementById('modalVehicleImg').src = imagePath;
+        document.getElementById('modalVehicleImg').onerror = function() {
+            this.src = 'https://via.placeholder.com/300x180?text=Vehicle+Image';
+        };
+        document.getElementById('modalVehicleDesc').innerText = desc;
+
+        calculatePrice();
+        document.getElementById('vehicleModal').style.display = 'flex';
     }
 
-    function closeBookingModal() {
-        document.getElementById('bookingModal').style.display = 'none';
+    function closeVehicleModal() {
+        document.getElementById('vehicleModal').style.display = 'none';
+    }
+
+    function calculatePrice() {
+        const pDateVal = document.getElementById('pickupDate').value;
+        const rDateVal = document.getElementById('returnDate').value;
+        const deliveryType = document.getElementById('deliveryType').value;
+
+        if (!pDateVal || !rDateVal) return;
+
+        const pDate = new Date(pDateVal);
+        const rDate = new Date(rDateVal);
+
+        let diffTime = rDate.getTime() - pDate.getTime();
+        let diffDays = Math.ceil(diffTime / (1000 * 360 * 24)) + 1; // inclusive of start day
+
+        if (diffDays < 1) diffDays = 1;
+
+        let total = diffDays * currentDailyRate;
+        if (deliveryType === 'DOORSTEP') {
+            total += 300;
+        }
+
+        document.getElementById('totalPriceDisplay').innerText = '₹' + total.toFixed(2) + ' (' + diffDays + ' Days)';
     }
 
     window.onclick = function(event) {
-        var modal = document.getElementById('bookingModal');
+        var modal = document.getElementById('vehicleModal');
         if (event.target === modal) {
-            closeBookingModal();
+            closeVehicleModal();
         }
     }
 </script>

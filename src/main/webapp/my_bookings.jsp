@@ -344,6 +344,7 @@
 <div class="navbar">
     <a href="catalog.jsp" class="brand">Drive<span>Eazy</span></a>
     <div class="nav-actions">
+        <a href="about.jsp" class="nav-btn">ℹ️ About Us</a>
         <a href="catalog.jsp" class="nav-btn">🚘 Book Another Vehicle</a>
         <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
     </div>
