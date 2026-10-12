@@ -25,7 +25,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveEazy - Customer Portal</title>
+    <title>GoDrive - Customer Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -116,7 +116,7 @@
     <div class="auth-container">
 
         <div class="auth-header">
-            <h1>Welcome to DriveEazy</h1>
+            <h1>Welcome to GoDrive</h1>
             <p>Self-drive vehicle rentals made effortless</p>
         </div>
 
@@ -150,7 +150,7 @@
             </form>
 
             <div class="auth-footer">
-                New to DriveEazy? <a href="#" onclick="switchTab('register'); return false;">Create an account</a>
+                New to GoDrive? <a href="#" onclick="switchTab('register'); return false;">Create an account</a>
             </div>
         </div>
 

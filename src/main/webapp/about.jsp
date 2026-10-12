@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us - DriveEazy</title>
+    <title>About Us - GoDrive</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -260,7 +260,7 @@
 <!-- Dark Hero Header -->
 <div class="hero">
     <h1>Redefining Self-Drive Mobility</h1>
-    <p>DriveEazy gives you the freedom to explore roads with complete autonomy, transparent pricing, and instant online KYC verification.</p>
+    <p>GoDrive gives you the freedom to explore roads with complete autonomy, transparent pricing, and instant online KYC verification.</p>
 </div>
 
 <!-- Main Wrapper -->
@@ -324,7 +324,7 @@
 
 <!-- Footer -->
 <div class="footer">
-    &copy; <%= java.time.Year.now().getValue() %> DriveEazy Self-Drive Rentals. All rights reserved.
+    &copy; <%= java.time.Year.now().getValue() %> GoDrive Self-Drive Rentals. All rights reserved.
 </div>
 
 </body>

@@ -18,7 +18,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Reservations - DriveEazy</title>
+    <title>My Reservations - GoDrive</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -342,7 +342,7 @@
 
 <!-- Navbar -->
 <div class="navbar">
-    <a href="catalog.jsp" class="brand">Drive<span>Eazy</span></a>
+    <a href="catalog.jsp" class="brand">Go<span>Drive</span></a>
     <div class="nav-actions">
         <a href="about.jsp" class="nav-btn">ℹ️ About Us</a>
         <a href="catalog.jsp" class="nav-btn">🚘 Book Another Vehicle</a>
@@ -439,7 +439,7 @@
         <% if (!"APPROVED".equalsIgnoreCase(kycStatus) && !"ACTIVE".equalsIgnoreCase(kycStatus) && !"COMPLETED".equalsIgnoreCase(kycStatus) && !"REJECTED".equalsIgnoreCase(kycStatus)) { %>
         <div class="kyc-upload-box">
             <div class="kyc-title">📄 Verification Required for Vehicle Handover</div>
-            <div class="kyc-sub">Please submit your Driving License details to get your reservation confirmed by DriveEazy.</div>
+            <div class="kyc-sub">Please submit your Driving License details to get your reservation confirmed by GoDrive.</div>
 
             <form action="UploadKYCServlet" method="POST" enctype="multipart/form-data" class="kyc-form">
                 <input type="hidden" name="bookingId" value="<%= bookingId %>">
@@ -487,7 +487,7 @@
     <div class="empty-state">
         <h3>No Reservations Found</h3>
         <p style="color: #64748b;">You haven't booked any self-drive cars or bikes yet.</p>
-        <a href="catalog.jsp" class="btn-browse">Explore DriveEazy Fleet</a>
+        <a href="catalog.jsp" class="btn-browse">Explore GoDrive Fleet</a>
     </div>
     <%
             }

@@ -18,7 +18,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveEazy Admin Dashboard</title>
+    <title>GoDrive Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -43,7 +43,7 @@
             padding-bottom: 60px;
         }
 
-        /* DriveEazy Admin Navbar */
+        /* GoDrive Admin Navbar */
         .navbar {
             background: #000000;
             color: #ffffff;
@@ -347,7 +347,7 @@
 
 <!-- Navbar -->
 <div class="navbar">
-    <a href="admin_dashboard.jsp" class="brand">Drive<span>Eazy</span> Admin</a>
+    <a href="admin_dashboard.jsp" class="brand">Go<span>Drive</span> Admin</a>
     <div class="nav-right">
         <a href="admin_bookings.jsp" class="nav-btn">📋 Manage Customer Bookings</a>
         <a href="catalog.jsp" class="nav-btn" target="_blank">🌐 Live Catalog View</a>

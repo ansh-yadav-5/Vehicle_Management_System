@@ -37,7 +37,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveEazy - Vehicle Fleet Catalog</title>
+    <title>GoDrive - Vehicle Fleet Catalog</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -334,7 +334,7 @@
             background: #1e293b;
         }
 
-        /* Extended Vehicle Details Modal */
+        /* Expanded Vehicle Details Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -376,9 +376,7 @@
         }
 
         @media (max-width: 768px) {
-            .modal-body-grid {
-                grid-template-columns: 1fr;
-            }
+            .modal-body-grid { grid-template-columns: 1fr; }
         }
 
         .modal-vehicle-preview {
@@ -495,6 +493,57 @@
         .step-title { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
         .step-desc { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 
+        /* WHY US SECTION STYLING */
+        .why-us-section {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 60px 5%;
+            border-top: 1px solid #1e293b;
+        }
+
+        .why-us-container {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        .why-us-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .why-card {
+            background: #000000;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 28px 24px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .why-card:hover {
+            transform: translateY(-4px);
+            border-color: #22c55e;
+        }
+
+        .why-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        .why-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .why-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
         .empty-catalog {
             grid-column: 1 / -1;
             text-align: center;
@@ -508,9 +557,9 @@
 
 <!-- Navbar -->
 <div class="navbar">
-    <a href="catalog.jsp" class="brand">Drive<span>Eazy</span></a>
+    <a href="catalog.jsp" class="brand">Go<span>Drive</span></a>
     <div class="nav-actions">
-    <a href="about.jsp" class="nav-btn">ℹ️ About Us</a>
+        <a href="about.jsp" class="nav-btn">ℹ️ About Us</a>
         <a href="my_bookings.jsp" class="nav-btn">📋 My Reservations</a>
         <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px;">Logout</a>
     </div>
@@ -733,6 +782,52 @@
     </div>
 </div>
 
+<!-- WHY US SECTION -->
+<div class="why-us-section">
+    <div class="why-us-container">
+
+        <div class="section-header">
+            <h2>Why Choose GoDrive?</h2>
+            <p>Experience hassle-free self-drive rentals engineered for safety, speed, and transparency</p>
+        </div>
+
+        <div class="why-us-grid">
+            <div class="why-card">
+                <span class="why-icon">💰</span>
+                <div class="why-title">Zero Hidden Charges</div>
+                <div class="why-desc">
+                    Transparent pricing with all taxes and insurance included upfront. What you see is exactly what you pay.
+                </div>
+            </div>
+
+            <div class="why-card">
+                <span class="why-icon">⚡</span>
+                <div class="why-title">Instant Digital KYC</div>
+                <div class="why-desc">
+                    Upload your driving license online and get verified in minutes without long paperwork queues at hubs.
+                </div>
+            </div>
+
+            <div class="why-card">
+                <span class="why-icon">🧼</span>
+                <div class="why-title">Deep Cleaned & Sanitized</div>
+                <div class="why-desc">
+                    Every car and bike undergoes multi-point safety checks and deep cleaning prior to key handover.
+                </div>
+            </div>
+
+            <div class="why-card">
+                <span class="why-icon">🛠️</span>
+                <div class="why-title">24/7 Roadside Assistance</div>
+                <div class="why-desc">
+                    Travel with complete peace of mind knowing our dedicated support team is available round-the-clock nationwide.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 <script>
     let currentDailyRate = 0;
 
@@ -768,7 +863,7 @@
         const rDate = new Date(rDateVal);
 
         let diffTime = rDate.getTime() - pDate.getTime();
-        let diffDays = Math.ceil(diffTime / (1000 * 360 * 24)) + 1; // inclusive of start day
+        let diffDays = Math.ceil(diffTime / (1000 * 3600 * 24)) + 1; // inclusive of start day
 
         if (diffDays < 1) diffDays = 1;
 

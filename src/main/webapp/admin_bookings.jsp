@@ -14,7 +14,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DriveEazy Admin - Booking & Fleet Control</title>
+    <title>GoDrive Admin - Booking & Fleet Control</title>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background: #f4f6f9; margin: 0; padding: 0; color: #111; }
@@ -34,7 +34,7 @@
 <body>
 
 <div class="navbar">
-    <div style="font-size:20px; font-weight:bold;">DriveEazy <span style="font-weight:300;">Admin</span></div>
+    <div style="font-size:20px; font-weight:bold;">GoDrive <span style="font-weight:300;">Admin</span></div>
     <div>
         <a href="admin_dashboard.jsp" style="color:#fff; text-decoration:none; margin-right:15px;">Dashboard</a>
         <a href="LogoutServlet" style="color: #ef4444; font-weight: 700; text-decoration: none; font-size: 14px; margin-left: 15px;">Logout</a>

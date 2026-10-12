@@ -52,7 +52,7 @@ public class GenerateInvoiceServlet extends HttpServlet {
                     if (rs.next()) {
                         response.reset();
                         response.setContentType("application/pdf");
-                        response.setHeader("Content-Disposition", "attachment; filename=\"DriveEazy_Invoice_#" + bookingId + ".pdf\"");
+                        response.setHeader("Content-Disposition", "attachment; filename=\"GoDrive_Invoice_#" + bookingId + ".pdf\"");
 
                         Document document = new Document(PageSize.A4, 36, 36, 36, 36);
                         PdfWriter.getInstance(document, response.getOutputStream());
@@ -64,7 +64,7 @@ public class GenerateInvoiceServlet extends HttpServlet {
                         Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.BLACK);
                         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 11, BaseColor.DARK_GRAY);
 
-                        Paragraph title = new Paragraph("DriveEazy - Rental Invoice", headerFont);
+                        Paragraph title = new Paragraph("GoDrive - Rental Invoice", headerFont);
                         title.setAlignment(Element.ALIGN_CENTER);
                         document.add(title);
 
@@ -90,7 +90,7 @@ public class GenerateInvoiceServlet extends HttpServlet {
 
                         document.add(table);
 
-                        Paragraph footer = new Paragraph("\n\nThank you for choosing DriveEazy! Have a safe journey.", subFont);
+                        Paragraph footer = new Paragraph("\n\nThank you for choosing GoDrive! Have a safe journey.", subFont);
                         footer.setAlignment(Element.ALIGN_CENTER);
                         document.add(footer);
 
