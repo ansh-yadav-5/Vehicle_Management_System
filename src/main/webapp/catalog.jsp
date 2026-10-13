@@ -493,7 +493,7 @@
         .step-title { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
         .step-desc { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 
-        /* WHY US SECTION STYLING */
+        /* WHY US SECTION */
         .why-us-section {
             background: #0f172a;
             color: #ffffff;
@@ -501,10 +501,7 @@
             border-top: 1px solid #1e293b;
         }
 
-        .why-us-container {
-            max-width: 1240px;
-            margin: 0 auto;
-        }
+        .why-us-container { max-width: 1240px; margin: 0 auto; }
 
         .why-us-grid {
             display: grid;
@@ -520,28 +517,72 @@
             transition: transform 0.2s ease, border-color 0.2s ease;
         }
 
-        .why-card:hover {
-            transform: translateY(-4px);
+        .why-card:hover { transform: translateY(-4px); border-color: #22c55e; }
+        .why-icon { font-size: 32px; margin-bottom: 16px; display: inline-block; }
+        .why-title { font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+        .why-desc { font-size: 13px; color: #94a3b8; line-height: 1.6; }
+
+        /* FAQ SECTION STYLING */
+        .faq-section {
+            background: #000000;
+            color: #ffffff;
+            padding: 60px 5%;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .faq-container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .faq-item:hover {
             border-color: #22c55e;
         }
 
-        .why-icon {
-            font-size: 32px;
-            margin-bottom: 16px;
-            display: inline-block;
-        }
-
-        .why-title {
-            font-size: 18px;
-            font-weight: 800;
+        .faq-question {
+            padding: 20px 24px;
+            font-size: 16px;
+            font-weight: 700;
             color: #ffffff;
-            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
         }
 
-        .why-desc {
-            font-size: 13px;
+        .faq-toggle-icon {
+            font-size: 18px;
+            color: #22c55e;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0 24px;
+            font-size: 14px;
             color: #94a3b8;
             line-height: 1.6;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .faq-item.active .faq-toggle-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            padding: 0 24px 20px 24px;
         }
 
         .empty-catalog {
@@ -735,7 +776,6 @@
 <!-- HOW TO BOOK SECTION -->
 <div class="how-it-works-section">
     <div class="how-it-works-container">
-
         <div class="section-header">
             <h2>How to Book Your Drive</h2>
             <p>Rent your favorite car or bike in 4 simple steps</p>
@@ -778,14 +818,12 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
 <!-- WHY US SECTION -->
 <div class="why-us-section">
     <div class="why-us-container">
-
         <div class="section-header">
             <h2>Why Choose GoDrive?</h2>
             <p>Experience hassle-free self-drive rentals engineered for safety, speed, and transparency</p>
@@ -824,7 +862,66 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
+<!-- FAQ SECTION -->
+<div class="faq-section">
+    <div class="faq-container">
+        <div class="section-header">
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know about renting with GoDrive</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>What documents are required to rent a vehicle?</span>
+                <span class="faq-toggle-icon">✚</span>
+            </div>
+            <div class="faq-answer">
+                You will need an active original Driving License (DL) along with a valid Government ID (Aadhaar, Passport, or Voter ID). Upload your DL details directly on the <strong>My Reservations</strong> page after booking.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>Is there a security deposit?</span>
+                <span class="faq-toggle-icon">✚</span>
+            </div>
+            <div class="faq-answer">
+                No! GoDrive operates with zero security deposit for verified users with approved KYC documents.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>How does doorstep delivery work?</span>
+                <span class="faq-toggle-icon">✚</span>
+            </div>
+            <div class="faq-answer">
+                When reserving a vehicle, select "Doorstep Delivery" (+₹300 fee). Our agent will deliver the cleaned vehicle directly to your specified location upon KYC approval.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>Can I extend my booking duration during a trip?</span>
+                <span class="faq-toggle-icon">✚</span>
+            </div>
+            <div class="faq-answer">
+                Yes! Go to <strong>My Reservations</strong>, select your active booking, enter the extra days required, and click "Extend Trip". Your new total will update automatically.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>What is the fuel policy?</span>
+                <span class="faq-toggle-icon">✚</span>
+            </div>
+            <div class="faq-answer">
+                GoDrive vehicles are delivered with a baseline fuel level. You should return the vehicle with the same fuel level as when received.
+            </div>
+        </div>
     </div>
 </div>
 
@@ -863,7 +960,7 @@
         const rDate = new Date(rDateVal);
 
         let diffTime = rDate.getTime() - pDate.getTime();
-        let diffDays = Math.ceil(diffTime / (1000 * 3600 * 24)) + 1; // inclusive of start day
+        let diffDays = Math.ceil(diffTime / (1000 * 3600 * 24)) + 1;
 
         if (diffDays < 1) diffDays = 1;
 
@@ -873,6 +970,21 @@
         }
 
         document.getElementById('totalPriceDisplay').innerText = '₹' + total.toFixed(2) + ' (' + diffDays + ' Days)';
+    }
+
+    function toggleFaq(element) {
+        const faqItem = element.parentElement;
+        const isActive = faqItem.classList.contains('active');
+
+        // Close all other active FAQ items
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Toggle clicked FAQ item
+        if (!isActive) {
+            faqItem.classList.add('active');
+        }
     }
 
     window.onclick = function(event) {
