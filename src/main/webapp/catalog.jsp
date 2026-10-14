@@ -268,6 +268,22 @@
             letter-spacing: 0.5px;
         }
 
+        .rating-badge-top {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
         .card-body {
             padding: 20px;
             display: flex;
@@ -289,6 +305,16 @@
             font-weight: 800;
             color: var(--text-dark);
             margin-bottom: 6px;
+        }
+
+        .rating-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #d97706;
+            margin-bottom: 8px;
         }
 
         .vehicle-desc {
@@ -413,14 +439,6 @@
             color: var(--text-dark);
         }
 
-        .modal-vehicle-desc {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-top: 10px;
-            width: 100%;
-        }
-
         .modal-form-side {
             display: flex;
             flex-direction: column;
@@ -522,7 +540,7 @@
         .why-title { font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
         .why-desc { font-size: 13px; color: #94a3b8; line-height: 1.6; }
 
-        /* FAQ SECTION STYLING */
+        /* FAQ SECTION */
         .faq-section {
             background: #000000;
             color: #ffffff;
@@ -530,10 +548,7 @@
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
-        .faq-container {
-            max-width: 860px;
-            margin: 0 auto;
-        }
+        .faq-container { max-width: 860px; margin: 0 auto; }
 
         .faq-item {
             background: #0f172a;
@@ -544,9 +559,7 @@
             transition: border-color 0.2s ease;
         }
 
-        .faq-item:hover {
-            border-color: #22c55e;
-        }
+        .faq-item:hover { border-color: #22c55e; }
 
         .faq-question {
             padding: 20px 24px;
@@ -560,11 +573,7 @@
             user-select: none;
         }
 
-        .faq-toggle-icon {
-            font-size: 18px;
-            color: #22c55e;
-            transition: transform 0.3s ease;
-        }
+        .faq-toggle-icon { font-size: 18px; color: #22c55e; transition: transform 0.3s ease; }
 
         .faq-answer {
             max-height: 0;
@@ -576,14 +585,8 @@
             transition: max-height 0.3s ease, padding 0.3s ease;
         }
 
-        .faq-item.active .faq-toggle-icon {
-            transform: rotate(45deg);
-        }
-
-        .faq-item.active .faq-answer {
-            max-height: 200px;
-            padding: 0 24px 20px 24px;
-        }
+        .faq-item.active .faq-toggle-icon { transform: rotate(45deg); }
+        .faq-item.active .faq-answer { max-height: 200px; padding: 0 24px 20px 24px; }
 
         .empty-catalog {
             grid-column: 1 / -1;
@@ -635,14 +638,22 @@
             boolean hasVehicles = false;
             try (Connection conn = DBConnection.getConnection()) {
                 if (conn != null) {
-                    String sql = "SELECT * FROM vehicles WHERE status = 'AVAILABLE'";
+                    String sql =
+                        "SELECT v.*, " +
+                        "COALESCE(AVG(r.rating), 0) AS avg_rating, " +
+                        "COUNT(r.review_id) AS total_reviews " +
+                        "FROM vehicles v " +
+                        "LEFT JOIN reviews r ON v.vehicle_id = r.vehicle_id " +
+                        "WHERE v.status = 'AVAILABLE' ";
 
                     if (categoryFilter != null && !categoryFilter.isEmpty()) {
-                        sql += " AND category = ?";
+                        sql += " AND v.category = ?";
                     }
                     if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                        sql += " AND (title LIKE ? OR brand LIKE ?)";
+                        sql += " AND (v.title LIKE ? OR v.brand LIKE ?)";
                     }
+
+                    sql += " GROUP BY v.vehicle_id";
 
                     PreparedStatement stmt = conn.prepareStatement(sql);
                     int paramIndex = 1;
@@ -666,25 +677,36 @@
                         String category = rs.getString("category");
                         double pricePerDay = rs.getDouble("price_per_day");
                         String imagePath = rs.getString("image_path");
+                        double avgRating = rs.getDouble("avg_rating");
+                        int totalReviews = rs.getInt("total_reviews");
 
                         String description = "";
-                        try {
-                            description = rs.getString("description");
-                        } catch (Exception ignored) {}
+                        try { description = rs.getString("description"); } catch (Exception ignored) {}
 
                         if (description == null || description.trim().isEmpty()) {
                             description = "Premium self-drive " + category.toLowerCase() + " offering superior performance and comfort for long drives.";
                         }
         %>
-        <!-- Vehicle Card (Clickable to open full details modal) -->
-        <div class="vehicle-card" onclick="openVehicleDetailsModal(<%= vehicleId %>, '<%= title.replace("'", "\\'") %>', '<%= brand.replace("'", "\\'") %>', '<%= category %>', <%= pricePerDay %>, '<%= imagePath %>', '<%= description.replace("'", "\\'").replace("\n", " ") %>')">
+        <!-- Vehicle Card -->
+        <div class="vehicle-card" onclick="openVehicleDetailsModal(<%= vehicleId %>, '<%= title.replace("'", "\\'") %>', '<%= brand.replace("'", "\\'") %>', '<%= category %>', <%= pricePerDay %>, '<%= imagePath %>', '<%= description.replace("'", "\\'").replace("\n", " ") %>', <%= avgRating %>, <%= totalReviews %>)">
             <div class="card-img-wrapper">
                 <span class="category-badge"><%= category %></span>
+                <% if (totalReviews > 0) { %>
+                <span class="rating-badge-top">⭐ <%= String.format("%.1f", avgRating) %></span>
+                <% } %>
                 <img src="<%= imagePath %>" class="card-img" alt="<%= title %>" onerror="this.src='https://via.placeholder.com/300x180?text=Vehicle+Image';">
             </div>
             <div class="card-body">
                 <div class="brand-subtitle"><%= brand %></div>
                 <div class="vehicle-title"><%= title %></div>
+
+                <div class="rating-row">
+                    <% if (totalReviews > 0) { %>
+                        ★ <%= String.format("%.1f", avgRating) %> <span style="color: #64748b; font-weight: normal;">(<%= totalReviews %> <%= totalReviews == 1 ? "review" : "reviews" %>)</span>
+                    <% } else { %>
+                        <span style="color: #94a3b8; font-weight: normal;">New to fleet (No ratings)</span>
+                    <% } %>
+                </div>
 
                 <div class="vehicle-desc"><%= description %></div>
 
@@ -712,7 +734,7 @@
 
 </div>
 
-<!-- Expanded Vehicle Details & Booking Modal -->
+<!-- Expanded Vehicle Details Modal -->
 <div id="vehicleModal" class="modal-overlay">
     <div class="modal-card">
         <div class="modal-header">
@@ -724,23 +746,20 @@
         </div>
 
         <div class="modal-body-grid">
-            <!-- Left Side: Vehicle Info & Image -->
             <div class="modal-vehicle-preview">
                 <img id="modalVehicleImg" src="" class="modal-vehicle-img" alt="Vehicle Image">
 
                 <div class="modal-info-pills">
                     <span class="info-tag" id="modalCategoryTag">Category: SUV</span>
+                    <span class="info-tag" style="background:#fef3c7; color:#b45309;" id="modalRatingTag">⭐ New</span>
                     <span class="info-tag" style="background:#dcfce7; color:#15803d;" id="modalRateTag">₹0.00 / Day</span>
                 </div>
 
-                <div class="modal-vehicle-desc" id="modalVehicleDesc">
-                    Detailed vehicle specs and comfort highlights will appear here.
-                </div>
+                <div style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 10px; width: 100%;" id="modalVehicleDesc"></div>
             </div>
 
-            <!-- Right Side: Booking Dates & Delivery Form -->
             <div class="modal-form-side">
-                <form action="CreateBookingServlet" method="POST" id="bookingForm">
+                <form action="CreateBookingServlet" method="POST">
                     <input type="hidden" name="vehicleId" id="modalVehicleId">
 
                     <div class="form-group">
@@ -928,17 +947,21 @@
 <script>
     let currentDailyRate = 0;
 
-    function openVehicleDetailsModal(id, title, brand, category, rate, imagePath, desc) {
+    function openVehicleDetailsModal(id, title, brand, category, rate, imagePath, desc, avgRating, totalReviews) {
         currentDailyRate = rate;
         document.getElementById('modalVehicleId').value = id;
         document.getElementById('modalBrandSubtitle').innerText = brand;
         document.getElementById('modalVehicleTitle').innerText = title;
         document.getElementById('modalCategoryTag').innerText = 'Category: ' + category;
         document.getElementById('modalRateTag').innerText = '₹' + rate.toFixed(2) + ' / Day';
+
+        if (totalReviews > 0) {
+            document.getElementById('modalRatingTag').innerText = '⭐ ' + avgRating.toFixed(1) + ' (' + totalReviews + ' reviews)';
+        } else {
+            document.getElementById('modalRatingTag').innerText = '⭐ New (0 reviews)';
+        }
+
         document.getElementById('modalVehicleImg').src = imagePath;
-        document.getElementById('modalVehicleImg').onerror = function() {
-            this.src = 'https://via.placeholder.com/300x180?text=Vehicle+Image';
-        };
         document.getElementById('modalVehicleDesc').innerText = desc;
 
         calculatePrice();
@@ -976,12 +999,10 @@
         const faqItem = element.parentElement;
         const isActive = faqItem.classList.contains('active');
 
-        // Close all other active FAQ items
         document.querySelectorAll('.faq-item').forEach(item => {
             item.classList.remove('active');
         });
 
-        // Toggle clicked FAQ item
         if (!isActive) {
             faqItem.classList.add('active');
         }
