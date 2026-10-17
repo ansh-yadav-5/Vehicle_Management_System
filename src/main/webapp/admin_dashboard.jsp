@@ -351,6 +351,7 @@
     <div class="nav-right">
         <a href="admin_bookings.jsp" class="nav-btn">📋 Manage Customer Bookings</a>
         <a href="catalog.jsp" class="nav-btn" target="_blank">🌐 Live Catalog View</a>
+        <a href="admin_analytics.jsp" class="nav-btn">📊 Analytics & Revenue</a>
         <a href="LogoutServlet" class="logout-link">Logout</a>
     </div>
 </div>
@@ -408,6 +409,7 @@
             <div class="metric-title">Avg Daily Rental</div>
             <div class="metric-value">₹<%= (int)avgRate %></div>
         </div>
+
     </div>
 
     <!-- Main Dashboard Grid -->
