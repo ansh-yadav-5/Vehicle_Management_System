@@ -146,7 +146,7 @@
                     <input type="password" name="password" placeholder="••••••••" required>
                 </div>
 
-                <button type="submit" class="btn-submit">Login as Customer</button>
+                <button type="submit" class="btn-submit">Login</button>
             </form>
 
             <div class="auth-footer">
@@ -159,7 +159,7 @@
             <form action="RegisterServlet" method="POST">
                 <div class="form-group">
                     <label>Full Name</label>
-                    <input type="text" name="name" placeholder="John Doe" required>
+                    <input type="text" name="name" placeholder="Your Name...." required>
                 </div>
 
                 <div class="form-group">
@@ -169,7 +169,7 @@
 
                 <div class="form-group">
                     <label>Phone Number</label>
-                    <input type="tel" name="phone" placeholder="+91 98765 43210" required>
+                    <input type="tel" name="phone" placeholder="+91 98XXXXXXXX" required>
                 </div>
 
                 <div class="form-group">

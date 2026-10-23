@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%
-    String adminUser = (String) session.getAttribute("adminUser");
-    if (adminUser == null) {
-        response.sendRedirect("admin_login.jsp");
-        return;
-    }
-%>
+<%--<%--%>
+<%--    String adminUser = (String) session.getAttribute("adminUser");--%>
+<%--    if (adminUser == null) {--%>
+<%--        response.sendRedirect("admin_login.jsp");--%>
+<%--        return;--%>
+<%--    }--%>
+<%--%>--%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
