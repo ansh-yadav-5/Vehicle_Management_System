@@ -6,7 +6,7 @@
     String userRole = (String) session.getAttribute("userRole");
 
     if (userName == null || !"ADMIN".equalsIgnoreCase(userRole)) {
-        response.sendRedirect("index.jsp");
+        response.sendRedirect("admin_login.jsp");
         return;
     }
 
@@ -164,20 +164,6 @@
         .alert-error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
         .alert-success { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
 
-        /* Dashboard Layout: Left Form + Right Table */
-        .dashboard-layout {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 25px;
-            align-items: start;
-        }
-
-        @media (max-width: 1024px) {
-            .dashboard-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
         /* Card Container */
         .card {
             background: #ffffff;
@@ -185,6 +171,7 @@
             padding: 24px;
             border: 1px solid var(--card-border);
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
         }
 
         .card-title {
@@ -257,6 +244,20 @@
             background: #1e293b;
         }
 
+        /* Dashboard Layout: Left Form + Right Table */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Table Filter Bar */
         .filter-bar {
             display: flex;
@@ -323,7 +324,18 @@
             background: #000000;
             color: #ffffff;
             border: none;
-            padding: 6px 10px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-approve {
+            background: #16a34a;
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 700;
@@ -349,7 +361,6 @@
 <div class="navbar">
     <a href="admin_dashboard.jsp" class="brand">Go<span>Drive</span> Admin</a>
     <div class="nav-right">
-        <a href="admin_bookings.jsp" class="nav-btn">📋 Manage Customer Bookings</a>
         <a href="catalog.jsp" class="nav-btn" target="_blank">🌐 Live Catalog View</a>
         <a href="admin_analytics.jsp" class="nav-btn">📊 Analytics & Revenue</a>
         <a href="LogoutServlet" class="logout-link">Logout</a>
@@ -358,8 +369,8 @@
 
 <!-- Header -->
 <div class="admin-hero">
-    <h1>Fleet Management Console</h1>
-    <p>Manage vehicle inventory, dynamic rental rates, and specifications</p>
+    <h1>Operations Console</h1>
+    <p>Manage vehicle fleet, review pending UPI payments, and verify customer KYC</p>
 </div>
 
 <div class="container">
@@ -368,18 +379,26 @@
     <%
         String error = (String) request.getAttribute("error");
         String message = (String) request.getAttribute("message");
+        String urlMsg = request.getParameter("msg");
+        String urlErr = request.getParameter("error");
+
         if (error != null) {
     %>
-        <div class="alert alert-error"><%= error %></div>
+    <div class="alert alert-error"><%= error %></div>
     <% } else if (message != null) { %>
-        <div class="alert alert-success"><%= message %></div>
+    <div class="alert alert-success"><%= message %></div>
+    <% } else if (urlMsg != null) { %>
+    <div class="alert alert-success"><%= urlMsg %></div>
+    <% } else if (urlErr != null) { %>
+    <div class="alert alert-error"><%= urlErr %></div>
     <% } %>
 
     <%
-        // Fetch Live Fleet Stats
+        // Fetch Live Fleet Stats & Pending Payments
         int totalVehicles = 0;
         int availableVehicles = 0;
         double avgRate = 0.0;
+        int pendingPaymentsCount = 0;
 
         try (Connection conn = DBConnection.getConnection()) {
             String statsSql = "SELECT COUNT(*) AS total, SUM(CASE WHEN status = 'AVAILABLE' THEN 1 ELSE 0 END) AS available, AVG(price_per_day) AS avg_price FROM vehicles";
@@ -390,6 +409,12 @@
                 availableVehicles = rsStats.getInt("available");
                 avgRate = rsStats.getDouble("avg_price");
             }
+
+            String paySql = "SELECT COUNT(*) AS pending_count FROM bookings WHERE payment_status = 'VERIFYING'";
+            ResultSet rsPay = stmt.executeQuery(paySql);
+            if (rsPay.next()) {
+                pendingPaymentsCount = rsPay.getInt("pending_count");
+            }
         } catch (Exception e) {
             // Log silently or display fallback
         }
@@ -398,7 +423,7 @@
     <!-- KPI Metrics -->
     <div class="metrics-grid">
         <div class="metric-card">
-            <div class="metric-title">Total Vehicles</div>
+            <div class="metric-title">Total Fleet Vehicles</div>
             <div class="metric-value"><%= totalVehicles %></div>
         </div>
         <div class="metric-card">
@@ -406,13 +431,141 @@
             <div class="metric-value" style="color: #16a34a;"><%= availableVehicles %></div>
         </div>
         <div class="metric-card">
-            <div class="metric-title">Avg Daily Rental</div>
+            <div class="metric-title">Avg Daily Rental Rate</div>
             <div class="metric-value">₹<%= (int)avgRate %></div>
         </div>
-
+        <div class="metric-card">
+            <div class="metric-title">Pending UTR Payments</div>
+            <div class="metric-value" style="color: #2563eb;"><%= pendingPaymentsCount %></div>
+        </div>
     </div>
 
-    <!-- Main Dashboard Grid -->
+    <!-- Section 1: UTR Payment Approval System -->
+    <div class="card">
+        <div class="card-title">
+            <span>💳 Pending UPI / UTR Payments Verification</span>
+            <span style="font-size: 12px; color: #64748b; font-weight: 600;">Action Required</span>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>User ID</th>
+                    <th>Total Price</th>
+                    <th>UTR / Transaction Ref</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <%
+                    try (Connection conn = DBConnection.getConnection();
+                         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM bookings WHERE payment_status = 'VERIFYING' ORDER BY booking_id DESC")) {
+                        ResultSet rsPayList = stmt.executeQuery();
+                        boolean hasVerifying = false;
+                        while (rsPayList.next()) {
+                            hasVerifying = true;
+                %>
+                <tr>
+                    <td><strong>#<%= rsPayList.getInt("booking_id") %></strong></td>
+                    <td>User #<%= rsPayList.getInt("user_id") %></td>
+                    <td style="color: #16a34a; font-weight: 800;">₹<%= String.format("%.2f", rsPayList.getDouble("total_price")) %></td>
+                    <td><code style="font-size: 13px; color: #2563eb; background: #eff6ff; padding: 4px 8px; border-radius: 4px; font-weight: 700;"><%= rsPayList.getString("transaction_id") %></code></td>
+                    <td>
+                        <form action="AdminVerifyPaymentServlet" method="POST" style="display:inline-block; margin-right: 4px;">
+                            <input type="hidden" name="bookingId" value="<%= rsPayList.getInt("booking_id") %>">
+                            <input type="hidden" name="action" value="APPROVE">
+                            <button type="submit" class="btn-approve">Approve Payment</button>
+                        </form>
+                        <form action="AdminVerifyPaymentServlet" method="POST" style="display:inline-block;">
+                            <input type="hidden" name="bookingId" value="<%= rsPayList.getInt("booking_id") %>">
+                            <input type="hidden" name="action" value="REJECT">
+                            <button type="submit" class="btn-delete">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                <%
+                    }
+                    if (!hasVerifying) {
+                %>
+                <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 18px;">No pending UTR transaction verification requests.</td></tr>
+                <%
+                        }
+                    } catch (Exception e) {
+                        out.println("<tr><td colspan='5' style='color:red;'>Error loading UTR verification records: " + e.getMessage() + "</td></tr>");
+                    }
+                %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: Customer KYC Approvals -->
+    <div class="card">
+        <div class="card-title">
+            <span>📄 Customer Driving License Verification</span>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>DL Number</th>
+                    <th>Document File</th>
+                    <th>KYC Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <%
+                    try (Connection conn = DBConnection.getConnection();
+                         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM bookings WHERE kyc_status = 'UNDER_REVIEW' ORDER BY booking_id DESC")) {
+                        ResultSet rsKyc = stmt.executeQuery();
+                        boolean hasKyc = false;
+                        while (rsKyc.next()) {
+                            hasKyc = true;
+                %>
+                <tr>
+                    <td><strong>#<%= rsKyc.getInt("booking_id") %></strong></td>
+                    <td style="font-weight: 700;"><%= rsKyc.getString("dl_number") != null ? rsKyc.getString("dl_number") : "N/A" %></td>
+                    <td>
+                        <% if (rsKyc.getString("dl_image_path") != null) { %>
+                        <a href="<%= rsKyc.getString("dl_image_path") %>" target="_blank" style="color: #2563eb; font-weight: 700; text-decoration: none;">View Document</a>
+                        <% } else { %>
+                        No File
+                        <% } %>
+                    </td>
+                    <td><span class="badge-status" style="background: #e0f2fe; color: #0369a1;">UNDER REVIEW</span></td>
+                    <td>
+                        <form action="AdminKYCServlet" method="POST" style="display:inline-block; margin-right: 4px;">
+                            <input type="hidden" name="bookingId" value="<%= rsKyc.getInt("booking_id") %>">
+                            <input type="hidden" name="action" value="APPROVE">
+                            <button type="submit" class="btn-approve">Approve KYC</button>
+                        </form>
+                        <form action="AdminKYCServlet" method="POST" style="display:inline-block;">
+                            <input type="hidden" name="bookingId" value="<%= rsKyc.getInt("booking_id") %>">
+                            <input type="hidden" name="action" value="REJECT">
+                            <button type="submit" class="btn-delete">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                <%
+                    }
+                    if (!hasKyc) {
+                %>
+                <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 18px;">No pending customer KYC submissions.</td></tr>
+                <%
+                        }
+                    } catch (Exception e) {
+                        out.println("<tr><td colspan='5' style='color:red;'>Error loading KYC verification records: " + e.getMessage() + "</td></tr>");
+                    }
+                %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 3: Main Fleet Management Layout -->
     <div class="dashboard-layout">
 
         <!-- Left Form: Add New Vehicle -->
@@ -497,71 +650,71 @@
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Vehicle</th>
-                            <th>Category</th>
-                            <th>Rate / Day</th>
-                            <th>Status</th>
-                            <th>Quick Actions</th>
-                        </tr>
+                    <tr>
+                        <th>Image</th>
+                        <th>Vehicle</th>
+                        <th>Category</th>
+                        <th>Rate / Day</th>
+                        <th>Status</th>
+                        <th>Quick Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <%
-                            try (Connection conn = DBConnection.getConnection()) {
-                                String sql = "SELECT * FROM vehicles WHERE 1=1";
-                                if (filterCategory != null && !filterCategory.isEmpty()) {
-                                    sql += " AND category = ?";
-                                }
-                                sql += " ORDER BY vehicle_id DESC";
-
-                                PreparedStatement stmt = conn.prepareStatement(sql);
-                                if (filterCategory != null && !filterCategory.isEmpty()) {
-                                    stmt.setString(1, filterCategory);
-                                }
-
-                                ResultSet rs = stmt.executeQuery();
-
-                                while (rs.next()) {
-                                    int vId = rs.getInt("vehicle_id");
-                                    String status = rs.getString("status");
-                                    double price = rs.getDouble("price_per_day");
-                        %>
-                        <tr>
-                            <td>
-                                <img src="<%= rs.getString("image_path") %>" class="vehicle-thumb" alt="Thumb" onerror="this.src='https://via.placeholder.com/50x38?text=Vehicle';">
-                            </td>
-                            <td>
-                                <strong><%= rs.getString("title") %></strong><br>
-                                <span style="font-size: 11px; color: #64748b;"><%= rs.getString("brand") %></span>
-                            </td>
-                            <td><%= rs.getString("category") %></td>
-                            <td>
-                                <form action="UpdateVehiclePriceServlet" method="POST" style="display:flex; gap:4px; align-items:center;">
-                                    <input type="hidden" name="vehicleId" value="<%= vId %>">
-                                    ₹<input type="number" step="0.01" name="newPrice" value="<%= price %>" style="width:70px; padding:4px; font-size:12px;">
-                                    <button type="submit" class="btn-action">Save</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form action="UpdateVehicleStatusServlet" method="POST">
-                                    <input type="hidden" name="vehicleId" value="<%= vId %>">
-                                    <select name="status" onchange="this.form.submit()" class="badge-status <%= "AVAILABLE".equalsIgnoreCase(status) ? "badge-available" : "badge-maintenance" %>" style="border:none; cursor:pointer;">
-                                        <option value="AVAILABLE" <%= "AVAILABLE".equalsIgnoreCase(status) ? "selected" : "" %>>AVAILABLE</option>
-                                        <option value="MAINTENANCE" <%= "MAINTENANCE".equalsIgnoreCase(status) ? "selected" : "" %>>MAINTENANCE</option>
-                                    </select>
-                                </form>
-                            </td>
-                            <td>
-                                <a href="DeleteVehicleServlet?vehicleId=<%= vId %>" class="btn-delete" onclick="return confirm('Are you sure you want to remove this vehicle from fleet?');">Delete</a>
-                            </td>
-                        </tr>
-                        <%
-                                }
-                            } catch (Exception e) {
-                                out.println("<tr><td colspan='6' style='color:red;'>Error: " + e.getMessage() + "</td></tr>");
+                    <%
+                        try (Connection conn = DBConnection.getConnection()) {
+                            String sql = "SELECT * FROM vehicles WHERE 1=1";
+                            if (filterCategory != null && !filterCategory.isEmpty()) {
+                                sql += " AND category = ?";
                             }
-                        %>
+                            sql += " ORDER BY vehicle_id DESC";
+
+                            PreparedStatement stmt = conn.prepareStatement(sql);
+                            if (filterCategory != null && !filterCategory.isEmpty()) {
+                                stmt.setString(1, filterCategory);
+                            }
+
+                            ResultSet rs = stmt.executeQuery();
+
+                            while (rs.next()) {
+                                int vId = rs.getInt("vehicle_id");
+                                String status = rs.getString("status");
+                                double price = rs.getDouble("price_per_day");
+                    %>
+                    <tr>
+                        <td>
+                            <img src="<%= rs.getString("image_path") %>" class="vehicle-thumb" alt="Thumb" onerror="this.src='https://via.placeholder.com/50x38?text=Vehicle';">
+                        </td>
+                        <td>
+                            <strong><%= rs.getString("title") %></strong><br>
+                            <span style="font-size: 11px; color: #64748b;"><%= rs.getString("brand") %></span>
+                        </td>
+                        <td><%= rs.getString("category") %></td>
+                        <td>
+                            <form action="UpdateVehiclePriceServlet" method="POST" style="display:flex; gap:4px; align-items:center;">
+                                <input type="hidden" name="vehicleId" value="<%= vId %>">
+                                ₹<input type="number" step="0.01" name="newPrice" value="<%= price %>" style="width:70px; padding:4px; font-size:12px;">
+                                <button type="submit" class="btn-action">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="UpdateVehicleStatusServlet" method="POST">
+                                <input type="hidden" name="vehicleId" value="<%= vId %>">
+                                <select name="status" onchange="this.form.submit()" class="badge-status <%= "AVAILABLE".equalsIgnoreCase(status) ? "badge-available" : "badge-maintenance" %>" style="border:none; cursor:pointer;">
+                                    <option value="AVAILABLE" <%= "AVAILABLE".equalsIgnoreCase(status) ? "selected" : "" %>>AVAILABLE</option>
+                                    <option value="MAINTENANCE" <%= "MAINTENANCE".equalsIgnoreCase(status) ? "selected" : "" %>>MAINTENANCE</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="DeleteVehicleServlet?vehicleId=<%= vId %>" class="btn-delete" onclick="return confirm('Are you sure you want to remove this vehicle from fleet?');">Delete</a>
+                        </td>
+                    </tr>
+                    <%
+                            }
+                        } catch (Exception e) {
+                            out.println("<tr><td colspan='6' style='color:red;'>Error loading fleet directory: " + e.getMessage() + "</td></tr>");
+                        }
+                    %>
                     </tbody>
                 </table>
             </div>

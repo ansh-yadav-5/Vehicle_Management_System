@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
+    // Only redirect AWAY to the dashboard if they are ALREADY logged in as admin
     String userName = (String) session.getAttribute("userName");
     String userRole = (String) session.getAttribute("userRole");
 
@@ -7,6 +8,7 @@
         response.sendRedirect("admin_dashboard.jsp");
         return;
     }
+    // REMOVED the 'else { response.sendRedirect("index.jsp"); }' block entirely!
 
     String error = (String) request.getAttribute("error");
 %>
@@ -81,7 +83,7 @@
 <body>
 
 <div class="navbar">
-    <a href="index.jsp" class="brand">Drive<span>Eazy</span> Admin Console</a>
+    <a href="index.jsp" class="brand">Go<span>Drive</span> Admin Console</a>
 </div>
 
 <div class="auth-wrapper">
@@ -92,7 +94,7 @@
         </div>
 
         <% if (error != null) { %>
-            <div class="alert-error"><%= error %></div>
+        <div class="alert-error"><%= error %></div>
         <% } %>
 
         <form action="LoginServlet" method="POST">
