@@ -17,3 +17,20 @@
 
 <h3> 6. </h3>
 <img width="1920" height="1080" alt="Screenshot (58)" src="https://github.com/user-attachments/assets/076d4b1f-4117-4222-831c-87a83c0167ac" />
+.
+.
+.
+
+<h1> Admin View </h1>
+
+<h3> 7. </h3>
+<img width="1920" height="1080" alt="Screenshot (59)" src="https://github.com/user-attachments/assets/c7da64f6-7173-421a-a4e4-106c02eaa41e" />
+
+<h3> 8. </h3>
+<img width="1920" height="1080" alt="Screenshot (60)" src="https://github.com/user-attachments/assets/27d891e0-bc1b-4468-bc32-765fb6341ccd" />
+
+<h3> 9. </h3>
+<img width="1920" height="1080" alt="Screenshot (61)" src="https://github.com/user-attachments/assets/e5145c67-c6ec-4c5f-adbd-5c212a19994e" />
+
+<h3> 10. </h3>
+<img width="1920" height="1080" alt="Screenshot (62)" src="https://github.com/user-attachments/assets/48123cab-9cec-4f4f-89e4-ce8f18f76ca1" />
